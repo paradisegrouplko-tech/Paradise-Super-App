@@ -8,6 +8,13 @@ import { SectionDetail } from './pages/SectionDetail';
 import { Profile } from './pages/Profile';
 import { UPIPaymentCenter } from './pages/UPIPaymentCenter';
 
+// New Main Tabs
+import { VideoHub } from './pages/VideoHub';
+import { ChatHub } from './pages/ChatHub';
+import { Marketplace } from './pages/Marketplace';
+
+import { BottomNav } from './components/BottomNav';
+
 // Admin Pages
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -85,56 +92,86 @@ const App: React.FC = () => {
     );
   }
 
-  // Router Switch
-  switch (route) {
-    case AppRoute.LOGIN:
-      return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-    
-    case AppRoute.REGISTER:
-      return <Register onNavigate={handleNavigate} />;
-    
-    case AppRoute.DASHBOARD:
-      if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-      return <Dashboard user={user} onLogout={handleLogout} onNavigate={handleNavigate} />;
+  // Define which routes should show the Bottom Navigation
+  const showBottomNav = user !== null && [
+    AppRoute.DASHBOARD, 
+    AppRoute.VIDEO_HUB, 
+    AppRoute.CHAT_HUB, 
+    AppRoute.MARKETPLACE, 
+    AppRoute.LAUNCHER
+  ].includes(route);
 
-    case AppRoute.LAUNCHER:
-       if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-       return <Launcher onNavigate={handleNavigate} />;
-
-    case AppRoute.SECTION_DETAIL:
-      if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-      return <SectionDetail onNavigate={handleNavigate} section={currentSection} />;
+  // Router Content Logic
+  const renderContent = () => {
+    switch (route) {
+      case AppRoute.LOGIN:
+        return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
       
-    case AppRoute.PROFILE:
-      if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-      return <Profile user={user} onNavigate={handleNavigate} />;
-
-    case AppRoute.UPI_CENTER:
-      if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-      return <UPIPaymentCenter user={user} onNavigate={handleNavigate} initialView={upiView} />;
-
-    // --- ADMIN ROUTES ---
-    case AppRoute.ADMIN_LOGIN:
-      return <AdminLogin onNavigate={handleNavigate} />;
-    
-    case AppRoute.ADMIN_DASHBOARD:
-      return <AdminDashboard onNavigate={handleNavigate} />;
-    
-    case AppRoute.ADMIN_USERS:
-      return <AdminUsers onNavigate={handleNavigate} />;
-    
-    case AppRoute.ADMIN_USER_DETAIL:
-      return <AdminUserDetail onNavigate={handleNavigate} userId={selectedUserId} />;
-    
-    case AppRoute.ADMIN_APPROVALS:
-      return <AdminApprovals onNavigate={handleNavigate} />;
+      case AppRoute.REGISTER:
+        return <Register onNavigate={handleNavigate} />;
       
-    case AppRoute.ADMIN_STATS:
-      return <AdminStats onNavigate={handleNavigate} />;
+      case AppRoute.DASHBOARD:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <Dashboard user={user} onLogout={handleLogout} onNavigate={handleNavigate} />;
 
-    default:
-      return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-  }
+      case AppRoute.LAUNCHER:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <Launcher onNavigate={handleNavigate} />;
+      
+      case AppRoute.VIDEO_HUB:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <VideoHub onNavigate={handleNavigate} />;
+
+      case AppRoute.CHAT_HUB:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <ChatHub onNavigate={handleNavigate} />;
+
+      case AppRoute.MARKETPLACE:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <Marketplace onNavigate={handleNavigate} />;
+
+      case AppRoute.SECTION_DETAIL:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <SectionDetail onNavigate={handleNavigate} section={currentSection} />;
+        
+      case AppRoute.PROFILE:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <Profile user={user} onNavigate={handleNavigate} />;
+
+      case AppRoute.UPI_CENTER:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <UPIPaymentCenter user={user} onNavigate={handleNavigate} initialView={upiView} />;
+
+      // --- ADMIN ROUTES ---
+      case AppRoute.ADMIN_LOGIN:
+        return <AdminLogin onNavigate={handleNavigate} />;
+      
+      case AppRoute.ADMIN_DASHBOARD:
+        return <AdminDashboard onNavigate={handleNavigate} />;
+      
+      case AppRoute.ADMIN_USERS:
+        return <AdminUsers onNavigate={handleNavigate} />;
+      
+      case AppRoute.ADMIN_USER_DETAIL:
+        return <AdminUserDetail onNavigate={handleNavigate} userId={selectedUserId} />;
+      
+      case AppRoute.ADMIN_APPROVALS:
+        return <AdminApprovals onNavigate={handleNavigate} />;
+        
+      case AppRoute.ADMIN_STATS:
+        return <AdminStats onNavigate={handleNavigate} />;
+
+      default:
+        return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+    }
+  };
+
+  return (
+    <>
+      {renderContent()}
+      {showBottomNav && <BottomNav activeRoute={route} onNavigate={handleNavigate} />}
+    </>
+  );
 };
 
 export default App;

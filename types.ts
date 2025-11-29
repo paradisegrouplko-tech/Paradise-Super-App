@@ -46,6 +46,11 @@ export enum AppRoute {
   PROFILE = 'PROFILE',
   UPI_CENTER = 'UPI_CENTER',
   
+  // New Main Tabs
+  VIDEO_HUB = 'VIDEO_HUB',
+  CHAT_HUB = 'CHAT_HUB',
+  MARKETPLACE = 'MARKETPLACE',
+  
   // Admin Routes
   ADMIN_LOGIN = 'ADMIN_LOGIN',
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',

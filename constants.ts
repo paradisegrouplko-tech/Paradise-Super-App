@@ -11,90 +11,47 @@ export const OCCUPATIONS: OccupationCategory[] = [
   {
     name: "Teachers & Educators",
     subCategories: [
-      "School Teacher",
-      "College Professor",
-      "University Lecturer",
-      "Tutor / Coaching Teacher",
-      "Principal / Academic Head",
-      "Special Educator",
-      "Early Childhood Educator",
-      "Research Scholar",
-      "Education Administrator",
-      "Education Consultant",
-      "Language Trainer",
-      "Vocational Trainer",
-      "Sports / Physical Education Coach",
-      "Music / Arts Teacher",
-      "Other Educators"
+      "School Teacher", "College Professor", "University Lecturer", "Tutor / Coaching Teacher",
+      "Principal / Academic Head", "Special Educator", "Early Childhood Educator", "Research Scholar",
+      "Education Administrator", "Education Consultant", "Language Trainer", "Vocational Trainer",
+      "Sports / Physical Education Coach", "Music / Arts Teacher", "Other Educators"
     ]
   },
   {
     name: "Defense & Uniformed Services",
     subCategories: [
-      "Army Personnel",
-      "Navy Personnel",
-      "Air Force Personnel",
-      "Paramilitary Forces",
-      "Police Officer",
-      "Traffic Police",
-      "City Security Forces",
-      "Firefighter",
-      "Coast Guard",
-      "Prison & Correctional Services",
-      "Border Security Forces",
-      "Intelligence & Investigation Services",
-      "Disaster Response Team",
-      "Private Security Officer",
-      "Other Defense / Uniform Services"
+      "Army Personnel", "Navy Personnel", "Air Force Personnel", "Paramilitary Forces", "Police Officer",
+      "Traffic Police", "City Security Forces", "Firefighter", "Coast Guard", "Prison & Correctional Services",
+      "Border Security Forces", "Intelligence & Investigation Services", "Disaster Response Team",
+      "Private Security Officer", "Other Defense / Uniform Services"
     ]
   },
   {
     name: "Business Owners & Entrepreneurs",
     subCategories: [
-      "Real Estate Developer",
-      "Contractor / Builder",
-      "Retail Shop Owner",
-      "Wholesale Trader",
-      "Manufacturing Business Owner",
-      "Import / Export Business",
-      "E-Commerce Seller",
-      "Restaurant / Café Owner",
-      "Hotel / Resort Owner",
-      "Travel Agency Owner",
-      "Transport / Logistics Owner",
-      "Distributor / Stockist",
-      "Franchise Owner",
-      "IT Services Owner",
-      "Marketing Agency Owner",
-      "Finance / Loan Consultant",
-      "Insurance Agency Owner",
-      "Healthcare Clinic Owner",
-      "Pharmacy Owner",
-      "Automobile Dealership Owner",
-      "Agriculture Business Owner",
-      "Construction Material Supplier",
-      "Interior / Architecture Firm Owner",
-      "Gym / Fitness Center Owner",
-      "Coaching Institute Owner",
-      "Event Management Owner",
-      "Jewellery Business Owner",
-      "Garment Factory Owner",
-      "Beauty Salon / Spa Owner",
-      "Entertainment / Media Company Owner",
-      "Printing & Packaging Business",
-      "Consultancy Firm Owner",
-      "Other Business Owners",
-      "Other Entrepreneurs"
+      "Real Estate Developer", "Contractor / Builder", "Retail Shop Owner", "Wholesale Trader",
+      "Manufacturing Business Owner", "Import / Export Business", "E-Commerce Seller", "Restaurant / Café Owner",
+      "Hotel / Resort Owner", "Travel Agency Owner", "Transport / Logistics Owner", "Distributor / Stockist",
+      "Franchise Owner", "IT Services Owner", "Marketing Agency Owner", "Finance / Loan Consultant",
+      "Insurance Agency Owner", "Healthcare Clinic Owner", "Pharmacy Owner", "Automobile Dealership Owner",
+      "Agriculture Business Owner", "Construction Material Supplier", "Interior / Architecture Firm Owner",
+      "Gym / Fitness Center Owner", "Coaching Institute Owner", "Event Management Owner", "Jewellery Business Owner",
+      "Garment Factory Owner", "Beauty Salon / Spa Owner", "Entertainment / Media Company Owner",
+      "Printing & Packaging Business", "Consultancy Firm Owner", "Other Business Owners", "Other Entrepreneurs"
     ]
   },
   {
     name: "Workers, Professionals & Skilled Trades",
     subCategories: [
-      // Flattened list for validation, but UI will use groups
-      "Doctor", "Surgeon", "Dentist", "Pharmacist", "Nurse", "Engineer", "Software Engineer", "Chartered Accountant", "Company Secretary", "Lawyer / Advocate", "Architect", "Interior Designer", "Civil Engineer", "Mechanical Engineer", "Electrical Engineer", "Data Scientist", "Pilot", "Scientist / Researcher", "Psychologist", "Accountant", "Banker", "Financial Analyst", "Medical Lab Technician",
-      "HR Professional", "Marketing Professional", "Sales Executive", "Customer Service Executive", "Operations Manager", "Business Analyst", "Graphic Designer", "Video Editor", "Social Media Manager", "Copywriter", "Office Assistant",
-      "Electrician", "Plumber", "Carpenter", "Painter", "Welder", "Machine Operator", "Automobile Mechanic", "AC Technician", "CCTV Technician", "Solar Technician", "Mobile Technician", "Computer Repair Technician",
-      "Construction Worker", "Factory Worker", "Warehouse Worker", "Delivery Personnel", "Driver", "Cleaner", "Security Guard", "Housekeeping Staff", "Farm Worker", "Helper",
+      "Doctor", "Surgeon", "Dentist", "Pharmacist", "Nurse", "Engineer", "Software Engineer", "Chartered Accountant", 
+      "Company Secretary", "Lawyer / Advocate", "Architect", "Interior Designer", "Civil Engineer", "Mechanical Engineer", 
+      "Electrical Engineer", "Data Scientist", "Pilot", "Scientist / Researcher", "Psychologist", "Accountant", "Banker", 
+      "Financial Analyst", "Medical Lab Technician", "HR Professional", "Marketing Professional", "Sales Executive", 
+      "Customer Service Executive", "Operations Manager", "Business Analyst", "Graphic Designer", "Video Editor", 
+      "Social Media Manager", "Copywriter", "Office Assistant", "Electrician", "Plumber", "Carpenter", "Painter", 
+      "Welder", "Machine Operator", "Automobile Mechanic", "AC Technician", "CCTV Technician", "Solar Technician", 
+      "Mobile Technician", "Computer Repair Technician", "Construction Worker", "Factory Worker", "Warehouse Worker", 
+      "Delivery Personnel", "Driver", "Cleaner", "Security Guard", "Housekeeping Staff", "Farm Worker", "Helper", 
       "Other Professionals", "Other Workers"
     ],
     groups: [
@@ -277,4 +234,72 @@ export const APP_SECTIONS: AppCategory[] = [
       { id: 68, name: "News & Updates" },
     ]
   }
+];
+
+// --- DUMMY DATA FOR NEW SECTIONS ---
+
+export const DUMMY_VIDEOS = [
+  {
+    id: 1,
+    title: "How to Grow Your Network Fast",
+    channel: "Paradise Academy",
+    views: "12K views",
+    thumbnail: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600",
+  },
+  {
+    id: 2,
+    title: "Top 10 Investment Tips for 2024",
+    channel: "Finance Guru",
+    views: "8.5K views",
+    thumbnail: "https://images.unsplash.com/photo-1579535984712-a8f7492d240b?auto=format&fit=crop&q=80&w=600",
+  },
+  {
+    id: 3,
+    title: "Real Estate Market Trends",
+    channel: "Property Insider",
+    views: "15K views",
+    thumbnail: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600",
+  },
+  {
+    id: 4,
+    title: "Digital Marketing Masterclass",
+    channel: "Tech Skills",
+    views: "5K views",
+    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600",
+  },
+];
+
+export const DUMMY_CHATS = [
+  {
+    id: 1,
+    name: "Sponsor (John Doe)",
+    lastMessage: "Don't forget the meeting at 5 PM.",
+    time: "10:30 AM",
+    avatar: "S",
+    unread: 2
+  },
+  {
+    id: 2,
+    name: "Support Team",
+    lastMessage: "Your ticket #1234 has been resolved.",
+    time: "Yesterday",
+    avatar: "T",
+    unread: 0
+  },
+  {
+    id: 3,
+    name: "Direct Member (Alice)",
+    lastMessage: "I just registered a new member!",
+    time: "Yesterday",
+    avatar: "A",
+    unread: 0
+  },
+  {
+    id: 4,
+    name: "Network Group",
+    lastMessage: "Welcome to all new joiners!",
+    time: "2 days ago",
+    avatar: "G",
+    unread: 5
+  },
 ];

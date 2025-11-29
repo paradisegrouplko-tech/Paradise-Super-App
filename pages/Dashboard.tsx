@@ -33,8 +33,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
 
+  // NOTE: Added extra padding-bottom (pb-24) to accommodate the fixed BottomNav
   return (
-    <div className="min-h-screen bg-gray-100 pb-20">
+    <div className="min-h-screen bg-gray-100 pb-24">
       <AppDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
