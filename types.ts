@@ -1,0 +1,67 @@
+
+export interface User {
+  id: string; // This acts as the Sponsor ID (Member ID)
+  name: string;
+  phoneNumber: string;
+  sponsorId: string | null;
+  occupationCategory: string;
+  occupationSubCategory: string;
+  joinedAt: string;
+  password?: string; // stored plainly for this demo only
+  directMembers: string[]; // List of IDs of direct downline members
+  biometricEnabled?: boolean; // New feature
+  upiId?: string; // New feature
+  isBlocked?: boolean; // Admin feature
+}
+
+export interface PendingRegistration {
+  tempId: string; // Temporary ID for tracking
+  name: string;
+  phoneNumber: string;
+  password: string;
+  sponsorId: string;
+  occupationCategory: string;
+  occupationSubCategory: string;
+  submittedAt: string;
+  otp: string;
+}
+
+export interface OccupationGroup {
+  name: string;
+  options: string[];
+}
+
+export interface OccupationCategory {
+  name: string;
+  subCategories: string[]; // Flat list for easy access/validation
+  groups?: OccupationGroup[]; // Optional groups for UI rendering (e.g. optgroups)
+}
+
+export enum AppRoute {
+  LOGIN = 'LOGIN',
+  REGISTER = 'REGISTER',
+  DASHBOARD = 'DASHBOARD',
+  LAUNCHER = 'LAUNCHER',
+  SECTION_DETAIL = 'SECTION_DETAIL',
+  PROFILE = 'PROFILE',
+  UPI_CENTER = 'UPI_CENTER',
+  
+  // Admin Routes
+  ADMIN_LOGIN = 'ADMIN_LOGIN',
+  ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
+  ADMIN_USERS = 'ADMIN_USERS',
+  ADMIN_USER_DETAIL = 'ADMIN_USER_DETAIL',
+  ADMIN_STATS = 'ADMIN_STATS',
+  ADMIN_APPROVALS = 'ADMIN_APPROVALS',
+}
+
+export interface AppSectionItem {
+  id: number;
+  name: string;
+  isCore?: boolean;
+}
+
+export interface AppCategory {
+  title: string;
+  items: AppSectionItem[];
+}
