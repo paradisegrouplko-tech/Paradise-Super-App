@@ -1,5 +1,5 @@
 
-import { User, PendingRegistration } from '../types';
+import { User, PendingRegistration, MemberCRMData } from '../types';
 import { ROOT_ADMIN_ID, ROOT_ADMIN_PHONE, MAX_DIRECT_MEMBERS, ADMIN_ID, ADMIN_PASSWORD } from '../constants';
 
 const USERS_KEY = 'paradise_users_v1';
@@ -23,7 +23,8 @@ const initStorage = () => {
       password: "admin",
       directMembers: [],
       biometricEnabled: false,
-      upiId: "admin@paradise"
+      upiId: "admin@paradise",
+      crmData: {}
     };
     localStorage.setItem(USERS_KEY, JSON.stringify([rootAdmin]));
   }
@@ -125,12 +126,18 @@ export const registerUser = (user: User): { success: boolean; message: string; u
   user.biometricEnabled = false; // Default off
   user.upiId = `${user.phoneNumber}@paradise`; // Default UPI ID
   user.isBlocked = false;
+  user.crmData = {}; // Initialize CRM data
 
   // 5. Update Structure
   users.push(user);
   
   // Add new user to Sponsor's directMembers list
   sponsor.directMembers.push(user.id);
+  
+  // Initialize default CRM status for new member under sponsor
+  if (!sponsor.crmData) sponsor.crmData = {};
+  sponsor.crmData[user.id] = { status: 'New' };
+
   users[sponsorIndex] = sponsor; // Update sponsor in array
 
   // 6. Save
@@ -175,6 +182,28 @@ export const updateUserProfile = (updatedUser: User) => {
     const currentSession = getCurrentSession();
     if (currentSession && currentSession.id === updatedUser.id) {
        localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+    }
+  }
+};
+
+export const updateMemberCRM = (sponsorId: string, memberId: string, data: MemberCRMData) => {
+  const users = getAllUsers();
+  const sponsorIndex = users.findIndex(u => u.id === sponsorId);
+  
+  if (sponsorIndex !== -1) {
+    const sponsor = users[sponsorIndex];
+    if (!sponsor.crmData) sponsor.crmData = {};
+    
+    // Merge existing data with new data
+    sponsor.crmData[memberId] = { ...sponsor.crmData[memberId], ...data };
+    
+    users[sponsorIndex] = sponsor;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    
+    // Update session if needed
+    const currentSession = getCurrentSession();
+    if (currentSession && currentSession.id === sponsorId) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sponsor));
     }
   }
 };

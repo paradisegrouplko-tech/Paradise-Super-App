@@ -12,6 +12,17 @@ export interface User {
   biometricEnabled?: boolean; // New feature
   upiId?: string; // New feature
   isBlocked?: boolean; // Admin feature
+  // CRM Data: Key is the memberId of the downline member
+  crmData?: Record<string, MemberCRMData>; 
+}
+
+export type MemberStatus = 'New' | 'Active' | 'Needs Training' | 'Not Responding' | 'Prospect for Real Estate';
+
+export interface MemberCRMData {
+  lastContactDate?: string;
+  nextFollowUpDate?: string;
+  notes?: string;
+  status: MemberStatus;
 }
 
 export interface PendingRegistration {
@@ -50,6 +61,10 @@ export enum AppRoute {
   VIDEO_HUB = 'VIDEO_HUB',
   CHAT_HUB = 'CHAT_HUB',
   MARKETPLACE = 'MARKETPLACE',
+  
+  // CRM Routes
+  CRM_DASHBOARD = 'CRM_DASHBOARD',
+  CRM_MEMBER_DETAIL = 'CRM_MEMBER_DETAIL',
   
   // Admin Routes
   ADMIN_LOGIN = 'ADMIN_LOGIN',

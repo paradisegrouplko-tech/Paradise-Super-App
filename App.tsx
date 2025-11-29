@@ -13,6 +13,10 @@ import { VideoHub } from './pages/VideoHub';
 import { ChatHub } from './pages/ChatHub';
 import { Marketplace } from './pages/Marketplace';
 
+// CRM Pages
+import { NetworkCRM } from './pages/crm/NetworkCRM';
+import { CRMMemberDetail } from './pages/crm/CRMMemberDetail';
+
 import { BottomNav } from './components/BottomNav';
 
 // Admin Pages
@@ -67,9 +71,13 @@ const App: React.FC = () => {
       setCurrentSection(params.section);
     }
     
-    // Store User ID for Admin Detail
-    if (newRoute === AppRoute.ADMIN_USER_DETAIL && params?.userId) {
+    // Store User ID for Admin Detail OR CRM Member Detail
+    if ((newRoute === AppRoute.ADMIN_USER_DETAIL || newRoute === AppRoute.CRM_MEMBER_DETAIL) && params?.userId) {
       setSelectedUserId(params.userId);
+    }
+    // Also check for memberId param name consistency (NetworkCRM uses memberId)
+    if (newRoute === AppRoute.CRM_MEMBER_DETAIL && params?.memberId) {
+      setSelectedUserId(params.memberId);
     }
     
     // Handle UPI Deep Linking
@@ -141,6 +149,15 @@ const App: React.FC = () => {
       case AppRoute.UPI_CENTER:
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <UPIPaymentCenter user={user} onNavigate={handleNavigate} initialView={upiView} />;
+
+      // --- CRM ROUTES ---
+      case AppRoute.CRM_DASHBOARD:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <NetworkCRM user={user} onNavigate={handleNavigate} />;
+
+      case AppRoute.CRM_MEMBER_DETAIL:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <CRMMemberDetail onNavigate={handleNavigate} memberId={selectedUserId} />;
 
       // --- ADMIN ROUTES ---
       case AppRoute.ADMIN_LOGIN:
