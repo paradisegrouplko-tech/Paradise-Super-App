@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, PlaySquare, MessageCircle, ShoppingBag, LayoutGrid } from 'lucide-react';
+import { Home, PlaySquare, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
 import { AppRoute } from '../types';
 
 interface BottomNavProps {
@@ -11,10 +11,10 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ activeRoute, onNavigate }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: <Home size={22} />, route: AppRoute.DASHBOARD },
-    { id: 'video', label: 'Video', icon: <PlaySquare size={22} />, route: AppRoute.VIDEO_HUB },
     { id: 'chat', label: 'Chat', icon: <MessageCircle size={22} />, route: AppRoute.CHAT_HUB },
+    { id: 'ai', label: 'Paradise AI', icon: <Sparkles size={22} />, route: AppRoute.AI_HUB },
+    { id: 'video', label: 'Video', icon: <PlaySquare size={22} />, route: AppRoute.VIDEO_HUB },
     { id: 'market', label: 'Marketplace', icon: <ShoppingBag size={22} />, route: AppRoute.MARKETPLACE },
-    { id: 'explore', label: 'Explore', icon: <LayoutGrid size={22} />, route: AppRoute.LAUNCHER },
   ];
 
   return (

@@ -47,7 +47,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
     { id: 8, name: "Ranks", icon: <Star size={20} /> }, 
   ];
 
-  // Updated Quick Commerce List
+  // Updated Quick Commerce List (5 items as requested)
   const quickCommerce = [
     { name: "Quick Grocery", icon: <ShoppingCart size={20} />, action: () => alert("Coming soon"), color: "bg-green-100 text-green-600" },
     { name: "Quick Essentials", icon: <Package size={20} />, action: () => alert("Coming soon"), color: "bg-orange-100 text-orange-600" },

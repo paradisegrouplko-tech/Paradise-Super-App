@@ -12,6 +12,7 @@ import { UPIPaymentCenter } from './pages/UPIPaymentCenter';
 import { VideoHub } from './pages/VideoHub';
 import { ChatHub } from './pages/ChatHub';
 import { Marketplace } from './pages/Marketplace';
+import { AIHub } from './pages/AIHub'; // New AI Page
 
 // CRM Pages
 import { NetworkCRM } from './pages/crm/NetworkCRM';
@@ -106,6 +107,7 @@ const App: React.FC = () => {
     AppRoute.VIDEO_HUB, 
     AppRoute.CHAT_HUB, 
     AppRoute.MARKETPLACE, 
+    AppRoute.AI_HUB,
     AppRoute.LAUNCHER
   ].includes(route);
 
@@ -133,6 +135,10 @@ const App: React.FC = () => {
       case AppRoute.CHAT_HUB:
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <ChatHub onNavigate={handleNavigate} />;
+
+      case AppRoute.AI_HUB:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <AIHub onNavigate={handleNavigate} />;
 
       case AppRoute.MARKETPLACE:
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;

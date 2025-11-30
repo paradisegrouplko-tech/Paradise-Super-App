@@ -18,28 +18,31 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
   const [todaysFollowUps, setTodaysFollowUps] = useState<User[]>([]);
 
   useEffect(() => {
-    // Fetch member details for all direct IDs
-    const fetchedMembers = user.directMembers
-      .map(id => getUserById(id))
-      .filter((u): u is User => !!u);
-    
-    setMembers(fetchedMembers);
-    setFilteredMembers(fetchedMembers);
+    if (user.directMembers) {
+      const fetchedMembers = user.directMembers
+        .map(id => getUserById(id))
+        .filter((u): u is User => !!u);
+      
+      setMembers(fetchedMembers);
+      setFilteredMembers(fetchedMembers);
 
-    // Check for Today's Follow-ups
-    const todayStr = new Date().toISOString().split('T')[0];
-    const followUps = fetchedMembers.filter(m => {
-      const crm = user.crmData?.[m.id];
-      return crm?.nextFollowUpDate === todayStr;
-    });
-    setTodaysFollowUps(followUps);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const followUps = fetchedMembers.filter(m => {
+        const crm = user.crmData?.[m.id];
+        return crm?.nextFollowUpDate === todayStr;
+      });
+      setTodaysFollowUps(followUps);
+    } else {
+      setMembers([]);
+      setFilteredMembers([]);
+      setTodaysFollowUps([]);
+    }
 
   }, [user]);
 
   useEffect(() => {
     let result = members;
 
-    // Apply Search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(m => 
@@ -48,7 +51,6 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
       );
     }
 
-    // Apply Category Filter
     if (activeFilter !== 'All') {
       if (activeFilter === 'Teachers') result = result.filter(m => m.occupationCategory.includes('Teachers'));
       else if (activeFilter === 'Defense') result = result.filter(m => m.occupationCategory.includes('Defense'));
@@ -66,13 +68,12 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
       case 'Needs Training': return 'bg-yellow-100 text-yellow-700';
       case 'Not Responding': return 'bg-red-100 text-red-700';
       case 'Prospect for Real Estate': return 'bg-purple-100 text-purple-700';
-      default: return 'bg-blue-100 text-blue-700'; // New
+      default: return 'bg-blue-100 text-blue-700';
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
       <div className="bg-white px-4 py-4 flex items-center gap-4 shadow-sm sticky top-0 z-10">
         <button 
           onClick={() => onNavigate(AppRoute.DASHBOARD)}
@@ -87,7 +88,6 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Today's Follow Ups */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-md">
            <div className="flex items-center gap-2 mb-3">
               <Calendar size={20} className="text-indigo-100" />
@@ -108,7 +108,6 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
            )}
         </div>
 
-        {/* Search & Filter */}
         <div className="space-y-3">
            <div className="relative">
              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
@@ -138,7 +137,6 @@ export const NetworkCRM: React.FC<NetworkCRMProps> = ({ user, onNavigate }) => {
            </div>
         </div>
 
-        {/* Member List */}
         <div className="space-y-3">
            {filteredMembers.map(member => (
              <div 

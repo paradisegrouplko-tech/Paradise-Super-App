@@ -60,6 +60,7 @@ export enum AppRoute {
   // New Main Tabs
   VIDEO_HUB = 'VIDEO_HUB',
   CHAT_HUB = 'CHAT_HUB',
+  AI_HUB = 'AI_HUB', // New AI Tab
   MARKETPLACE = 'MARKETPLACE',
   
   // CRM Routes
@@ -79,6 +80,8 @@ export interface AppSectionItem {
   id: number;
   name: string;
   isCore?: boolean;
+  previewMessage?: string; 
+  previewCategories?: string[];
 }
 
 export interface AppCategory {
