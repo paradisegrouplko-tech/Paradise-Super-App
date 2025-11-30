@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
-import { User, AppRoute, ServiceCategoryData } from '../types';
+import { User, AppRoute } from '../types';
 import { logoutUser } from '../services/storage';
 import { 
   Bell, QrCode, User as UserIcon,
-  Landmark, Wallet, History, CreditCard,
+  Landmark, Wallet, History,
   Users, Trophy, Network, UserPlus, ShieldCheck, Banknote, Star,
-  Zap, ShoppingBag, Heart, Plane, MonitorPlay, TrendingUp, Sun, GraduationCap,
-  ShoppingCart, Package, Pill, Car, Smartphone, Wifi, Droplet, Flame, LayoutGrid
+  LayoutGrid, Zap, ShoppingBag, Heart, Plane, MonitorPlay, TrendingUp, Sun, GraduationCap,
+  Building2, Key, FileCheck, Percent, Map, Home, Eye, MapPin, ArrowRight,
+  Clock, Pin, Smartphone, Globe, BookOpen, HelpCircle
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { AppDrawer } from '../components/AppDrawer';
@@ -27,14 +27,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
     onLogout();
   };
 
-  const navigateUPI = (view: 'HOME' | 'SEND' | 'SCAN' | 'HISTORY') => {
+  const navigateUPI = (view: string) => {
     onNavigate(AppRoute.UPI_CENTER, { view });
   };
 
-  // Safe name access
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
-  // Defensive check for directMembers
   const directMembersCount = (user.directMembers || []).length;
 
   const coreTools = [
@@ -48,15 +46,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
     { id: 8, name: "Ranks", icon: <Star size={20} /> }, 
   ];
 
-  const quickCommerce = [
-    { name: "Quick Grocery", icon: <ShoppingCart size={20} />, action: () => alert("Coming soon"), color: "bg-green-100 text-green-600" },
-    { name: "Quick Essentials", icon: <Package size={20} />, action: () => alert("Coming soon"), color: "bg-orange-100 text-orange-600" },
-    { name: "Quick Pharmacy", icon: <Pill size={20} />, action: () => alert("Coming soon"), color: "bg-rose-100 text-rose-600" },
-    { name: "Taxi & Car", icon: <Car size={20} />, action: () => alert("Coming soon"), color: "bg-blue-100 text-blue-600" },
-    { name: "Entertainment", icon: <MonitorPlay size={20} />, action: () => alert("Coming soon"), color: "bg-purple-100 text-purple-600" },
-  ];
-
-  // Helper to get icon component based on name string from constants
   const getCategoryIcon = (iconName: string, size: number) => {
     switch (iconName) {
       case 'Zap': return <Zap size={size} />;
@@ -67,9 +56,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
       case 'TrendingUp': return <TrendingUp size={size} />;
       case 'Sun': return <Sun size={size} />;
       case 'GraduationCap': return <GraduationCap size={size} />;
+      case 'Globe': return <Globe size={size} />;
+      case 'BookOpen': return <BookOpen size={size} />;
+      case 'Home': return <Home size={size} />;
+      case 'HelpCircle': return <HelpCircle size={size} />;
       default: return <Wallet size={size} />;
     }
   };
+
+  const realEstateServices = [
+    { icon: <Map size={20} />, label: "Buy Res. Plot" },
+    { icon: <Home size={20} />, label: "Buy Farm Land" },
+    { icon: <Building2 size={20} />, label: "Buy Comm. Plot" },
+    { icon: <LayoutGrid size={20} />, label: "Property Viewer" },
+    { icon: <MapPin size={20} />, label: "Site Visit", action: () => onNavigate(AppRoute.SITE_VISIT_BOOKING) },
+    { icon: <FileCheck size={20} />, label: "Verification" },
+    { icon: <Key size={20} />, label: "Sell Property" },
+    { icon: <Percent size={20} />, label: "Commission Plan" },
+  ];
+
+  // Recently Used Mock
+  const defaultRecent = [
+    { name: "Mobile Recharge", icon: <Smartphone size={20} /> },
+    { name: "Quick Grocery", icon: <ShoppingBag size={20} /> },
+    { name: "Taxi & Auto", icon: <Plane size={20} /> },
+    { name: "Online Courses", icon: <GraduationCap size={20} /> },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
@@ -81,14 +93,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
         onNavigate={onNavigate}
       />
 
-      {/* Header */}
       <header className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white shadow-lg sticky top-0 z-20">
         <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
-             <button 
-               onClick={() => setIsDrawerOpen(true)}
-               className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-sm font-bold shadow-sm"
-             >
+             <button onClick={() => setIsDrawerOpen(true)} className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-sm font-bold shadow-sm">
                {initial}
              </button>
              <div className="flex flex-col">
@@ -100,54 +108,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
              </div>
           </div>
           <div className="flex items-center gap-4">
-             <button onClick={() => navigateUPI('SCAN')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <QrCode size={22} />
-             </button>
-             <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
-                <Bell size={22} />
-                <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-             </button>
+             <button onClick={() => navigateUPI('SCAN')} className="p-2 hover:bg-white/10 rounded-full transition-colors"><QrCode size={22} /></button>
+             <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative"><Bell size={22} /><span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span></button>
           </div>
         </div>
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-4 space-y-6">
         
-        {/* --- SECTION 1: UPI + WALLET --- */}
+        {/* UPI + WALLET */}
         <div>
           <div className="bg-white rounded-2xl p-4 shadow-sm mb-3">
              <p className="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-wide">Transfer Money</p>
              <div className="grid grid-cols-5 gap-2 text-center">
-                <button onClick={() => navigateUPI('SCAN')} className="flex flex-col items-center gap-1 group">
-                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100">
-                     <QrCode size={20} />
-                   </div>
-                   <span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">Quick Pay</span>
-                </button>
-                <button onClick={() => navigateUPI('SEND')} className="flex flex-col items-center gap-1 group">
-                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform">
-                     <UserIcon size={20} />
-                   </div>
-                   <span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Mobile</span>
-                </button>
-                <button onClick={() => navigateUPI('SEND')} className="flex flex-col items-center gap-1 group">
-                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform">
-                     <Landmark size={20} />
-                   </div>
-                   <span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Bank</span>
-                </button>
-                <button onClick={() => navigateUPI('HOME')} className="flex flex-col items-center gap-1 group">
-                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform">
-                     <Wallet size={20} />
-                   </div>
-                   <span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Self</span>
-                </button>
-                <button onClick={() => navigateUPI('HISTORY')} className="flex flex-col items-center gap-1 group">
-                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform">
-                     <History size={20} />
-                   </div>
-                   <span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">History</span>
-                </button>
+                <button onClick={() => navigateUPI('SCAN')} className="flex flex-col items-center gap-1 group"><div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100"><QrCode size={20} /></div><span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">Quick Pay</span></button>
+                <button onClick={() => navigateUPI('SEND')} className="flex flex-col items-center gap-1 group"><div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform"><UserIcon size={20} /></div><span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Mobile</span></button>
+                <button onClick={() => navigateUPI('SEND')} className="flex flex-col items-center gap-1 group"><div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform"><Landmark size={20} /></div><span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Bank</span></button>
+                <button onClick={() => navigateUPI('HOME')} className="flex flex-col items-center gap-1 group"><div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform"><Wallet size={20} /></div><span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">To Self</span></button>
+                <button onClick={() => navigateUPI('HISTORY')} className="flex flex-col items-center gap-1 group"><div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform"><History size={20} /></div><span className="text-[10px] text-gray-700 font-medium whitespace-nowrap">History</span></button>
              </div>
           </div>
 
@@ -179,7 +157,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
           </div>
         </div>
 
-        {/* --- SECTION 2: NETWORK BUSINESS TOOLS --- */}
+        {/* NETWORK TOOLS */}
         <div>
            <div className="flex items-center gap-2 mb-3">
               <Users size={18} className="text-teal-700" />
@@ -200,7 +178,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
            </div>
         </div>
 
-        {/* --- SECTION 3: EXPLORE SERVICES (New 4x2 Grid) --- */}
+        {/* EXPLORE SERVICES (12 ICONS 4x3 Grid) */}
         <div>
            <div className="flex items-center gap-2 mb-3">
               <LayoutGrid size={18} className="text-purple-600" />
@@ -217,38 +195,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
                     <div className={`w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center ${category.color}`}>
                        {getCategoryIcon(category.iconName, 24)}
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700 text-center leading-tight h-8 flex items-center justify-center w-full">
-                      {category.title}
+                    <span className="text-[10px] font-bold text-gray-700 text-center leading-tight h-8 flex items-center justify-center w-full overflow-hidden">
+                      {category.title.split(' ')[0]} {/* Shortened label for grid fitting */}
                     </span>
                  </button>
               ))}
            </div>
         </div>
 
-        {/* --- SECTION 4: QUICK COMMERCE (5 Toggles) --- */}
+        {/* RECENTLY USED (Using Mock for V1) */}
         <div>
-           <div className="flex items-center gap-2 mb-3">
-              <Zap size={18} className="text-orange-600" />
-              <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">QuickCommerce</h2>
-           </div>
-           
+           <div className="flex items-center gap-2 mb-3"><Clock size={18} className="text-blue-600" /><h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Recently Used</h2></div>
            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-              {quickCommerce.map((item, idx) => (
-                 <button 
-                   key={idx} 
-                   onClick={item.action}
-                   className="flex-none w-24 bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 active:scale-95 transition-transform"
-                 >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.color}`}>
+              {defaultRecent.map((item, idx) => (
+                 <button key={idx} onClick={() => alert(`${item.name} - Coming Soon`)} className="flex-none w-24 bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 active:scale-95 transition-transform relative group">
+                    <div className={`absolute top-1 right-1 p-1 rounded-full text-gray-300 hover:text-gray-500`}>
+                       <Pin size={10} />
+                    </div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-gray-600`}>
                        {item.icon}
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700 text-center leading-tight h-6 flex items-center">{item.name}</span>
+                    <span className="text-[10px] font-bold text-gray-700 text-center leading-tight h-6 flex items-center justify-center w-full overflow-hidden">{item.name}</span>
                  </button>
               ))}
            </div>
         </div>
 
-        {/* --- SECTION 5: MY NETWORK CRM --- */}
+        {/* CRM */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mt-2">
            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -274,35 +247,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
            </Button>
         </div>
 
-        {/* --- SECTION 6: RECHARGE & BILLS (Secondary) --- */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm mt-2">
+        {/* REAL ESTATE SERVICES */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm mt-2 border-t-4 border-orange-500">
            <div className="flex justify-between items-center mb-3">
-             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Recharge & Bills (Utilities)</p>
-             <button className="text-[10px] text-teal-600 font-bold" onClick={() => alert("Coming soon")}>View All</button>
+             <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-orange-600" />
+                <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Real Estate Services</p>
+             </div>
+             <button className="text-[10px] text-teal-600 font-bold" onClick={() => onNavigate(AppRoute.ALL_REAL_ESTATE)}>View All</button>
            </div>
-           <div className="grid grid-cols-4 gap-y-4">
-              {[
-                { icon: <Smartphone size={18} />, label: "Mobile" },
-                { icon: <Wifi size={18} />, label: "WiFi" },
-                { icon: <Zap size={18} />, label: "Electric" },
-                { icon: <Droplet size={18} />, label: "Water" },
-                { icon: <Flame size={18} />, label: "Gas" },
-                { icon: <CreditCard size={18} />, label: "Card" },
-                { icon: <History size={18} />, label: "Loan" },
-                { icon: <LayoutGrid size={18} />, label: "More" },
-              ].map((item, idx) => (
-                <button key={idx} className="flex flex-col items-center gap-1 group" onClick={() => alert("Coming soon")}>
-                   <div className="w-9 h-9 rounded-lg bg-gray-50 text-gray-500 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+           <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+              {realEstateServices.map((item, idx) => (
+                <button 
+                   key={idx} 
+                   className="flex flex-col items-center gap-1 group active:scale-95 transition-transform"
+                   onClick={item.action ? item.action : () => alert(`${item.label} - Coming Soon`)}
+                >
+                   <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:bg-orange-100 transition-colors shadow-sm border border-orange-100">
                       {item.icon}
                    </div>
-                   <span className="text-[10px] text-gray-500 font-medium">{item.label}</span>
+                   <span className="text-[10px] text-gray-600 font-medium text-center leading-tight h-6 flex items-center justify-center w-full">
+                      {item.label}
+                   </span>
                 </button>
               ))}
            </div>
+           
+           <button 
+              onClick={() => onNavigate(AppRoute.ALL_REAL_ESTATE)}
+              className="w-full mt-4 py-2 bg-orange-50 text-orange-700 rounded-lg text-xs font-bold hover:bg-orange-100 transition-colors flex items-center justify-center gap-1"
+           >
+              View All Real Estate Services <ArrowRight size={14} />
+           </button>
         </div>
 
         <p className="text-center text-[10px] text-gray-300 py-4">
-          Secured by Paradise Systems • Version 1.5
+          Secured by Paradise Systems • Version 2.3
         </p>
 
       </main>

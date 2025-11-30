@@ -1,5 +1,4 @@
-
-import { User, PendingRegistration, MemberCRMData } from '../types';
+import { User, PendingRegistration, MemberCRMData, RecentServiceItem } from '../types';
 import { ROOT_ADMIN_ID, ROOT_ADMIN_PHONE, MAX_DIRECT_MEMBERS, ADMIN_ID, ADMIN_PASSWORD } from '../constants';
 
 const USERS_KEY = 'paradise_users_v1';
@@ -24,7 +23,8 @@ const initStorage = () => {
       directMembers: [],
       biometricEnabled: false,
       upiId: "admin@paradise",
-      crmData: {}
+      crmData: {},
+      recentlyUsed: []
     };
     localStorage.setItem(USERS_KEY, JSON.stringify([rootAdmin]));
   }
@@ -127,6 +127,7 @@ export const registerUser = (user: User): { success: boolean; message: string; u
   user.upiId = `${user.phoneNumber}@paradise`; // Default UPI ID
   user.isBlocked = false;
   user.crmData = {}; // Initialize CRM data
+  user.recentlyUsed = []; // Initialize history
 
   // 5. Update Structure
   users.push(user);
@@ -208,6 +209,82 @@ export const updateMemberCRM = (sponsorId: string, memberId: string, data: Membe
   }
 };
 
+// --- RECENTLY USED SERVICES LOGIC ---
+
+export const addRecentService = (userId: string, serviceName: string, category: string) => {
+  const users = getAllUsers();
+  const index = users.findIndex(u => u.id === userId);
+  
+  if (index !== -1) {
+    const user = users[index];
+    if (!user.recentlyUsed) user.recentlyUsed = [];
+
+    // Check if exists
+    const existingIndex = user.recentlyUsed.findIndex(s => s.name === serviceName);
+    
+    if (existingIndex !== -1) {
+      // Update timestamp
+      user.recentlyUsed[existingIndex].lastUsed = Date.now();
+    } else {
+      // Add new
+      user.recentlyUsed.push({
+        id: serviceName, // Use name as ID for simplicity
+        name: serviceName,
+        category,
+        isPinned: false,
+        lastUsed: Date.now()
+      });
+    }
+
+    // Sort logic handled in UI, storage just keeps data
+    users[index] = user;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    // Update session
+    const currentSession = getCurrentSession();
+    if (currentSession && currentSession.id === userId) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    }
+  }
+};
+
+export const togglePinService = (userId: string, serviceName: string): { success: boolean, message?: string } => {
+  const users = getAllUsers();
+  const index = users.findIndex(u => u.id === userId);
+  
+  if (index !== -1) {
+    const user = users[index];
+    if (!user.recentlyUsed) return { success: false };
+
+    const serviceIndex = user.recentlyUsed.findIndex(s => s.name === serviceName);
+    if (serviceIndex !== -1) {
+      const service = user.recentlyUsed[serviceIndex];
+      
+      if (!service.isPinned) {
+        // Check limit
+        const pinnedCount = user.recentlyUsed.filter(s => s.isPinned).length;
+        if (pinnedCount >= 4) {
+          return { success: false, message: "You can pin up to 4 services. Unpin one to pin a new one." };
+        }
+      }
+      
+      // Toggle
+      user.recentlyUsed[serviceIndex].isPinned = !service.isPinned;
+      
+      users[index] = user;
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      
+      // Update session
+      const currentSession = getCurrentSession();
+      if (currentSession && currentSession.id === userId) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      }
+      return { success: true };
+    }
+  }
+  return { success: false };
+};
+
 export const logoutUser = () => {
   localStorage.removeItem(SESSION_KEY);
 };
@@ -216,7 +293,6 @@ export const getCurrentSession = (): User | null => {
   const session = localStorage.getItem(SESSION_KEY);
   if (session) {
     const sessionUser = JSON.parse(session);
-    // Always fetch fresh data based on ID
     const freshData = getUserById(sessionUser.id);
     if (!freshData || freshData.isBlocked) return null;
     return freshData;

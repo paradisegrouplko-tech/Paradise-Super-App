@@ -1,4 +1,3 @@
-
 export interface User {
   id: string; // This acts as the Sponsor ID (Member ID)
   name: string;
@@ -13,7 +12,17 @@ export interface User {
   upiId?: string; // New feature
   isBlocked?: boolean; // Admin feature
   // CRM Data: Key is the memberId of the downline member
-  crmData?: Record<string, MemberCRMData>; 
+  crmData?: Record<string, MemberCRMData>;
+  // Recently Used Services
+  recentlyUsed?: RecentServiceItem[]; 
+}
+
+export interface RecentServiceItem {
+  id: string; // e.g. "Mobile Recharge"
+  name: string;
+  category: string; // To know which icon/color to use
+  isPinned: boolean;
+  lastUsed: number; // Timestamp
 }
 
 export type MemberStatus = 'New' | 'Active' | 'Needs Training' | 'Not Responding' | 'Prospect for Real Estate';
@@ -65,6 +74,10 @@ export enum AppRoute {
   
   // Dynamic Category Page
   SERVICE_CATEGORY = 'SERVICE_CATEGORY',
+  
+  // Real Estate Routes
+  SITE_VISIT_BOOKING = 'SITE_VISIT_BOOKING',
+  ALL_REAL_ESTATE = 'ALL_REAL_ESTATE',
   
   // CRM Routes
   CRM_DASHBOARD = 'CRM_DASHBOARD',
