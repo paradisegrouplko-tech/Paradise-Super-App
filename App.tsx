@@ -12,7 +12,10 @@ import { UPIPaymentCenter } from './pages/UPIPaymentCenter';
 import { VideoHub } from './pages/VideoHub';
 import { ChatHub } from './pages/ChatHub';
 import { Marketplace } from './pages/Marketplace';
-import { AIHub } from './pages/AIHub'; // New AI Page
+import { AIHub } from './pages/AIHub'; 
+
+// Dynamic Pages
+import { ServiceCategory } from './pages/ServiceCategory'; // New
 
 // CRM Pages
 import { NetworkCRM } from './pages/crm/NetworkCRM';
@@ -28,7 +31,7 @@ import { AdminUserDetail } from './pages/admin/AdminUserDetail';
 import { AdminApprovals } from './pages/admin/AdminApprovals';
 import { AdminStats } from './pages/admin/AdminStats';
 
-import { AppRoute, User, AppSectionItem } from './types';
+import { AppRoute, User, AppSectionItem, ServiceCategoryData } from './types';
 import { getCurrentSession, isAdminLoggedIn } from './services/storage';
 
 const App: React.FC = () => {
@@ -36,19 +39,19 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [currentSection, setCurrentSection] = useState<AppSectionItem | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string>(''); // For Admin detail view
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   
-  // State for UPI Deep Linking
+  // State for Service Category Page
+  const [currentServiceCategory, setCurrentServiceCategory] = useState<ServiceCategoryData | null>(null);
+  
   const [upiView, setUpiView] = useState<'HOME' | 'SEND' | 'SCAN' | 'HISTORY'>('HOME');
 
   useEffect(() => {
-    // Check for existing user session
     const session = getCurrentSession();
     if (session) {
       setUser(session);
       setRoute(AppRoute.DASHBOARD);
     } 
-    // Check for existing Admin session if no user session
     else if (isAdminLoggedIn()) {
       setRoute(AppRoute.ADMIN_DASHBOARD);
     }
@@ -67,21 +70,22 @@ const App: React.FC = () => {
   };
 
   const handleNavigate = (newRoute: AppRoute, params?: any) => {
-    // Store Section
     if (newRoute === AppRoute.SECTION_DETAIL && params?.section) {
       setCurrentSection(params.section);
     }
     
-    // Store User ID for Admin Detail OR CRM Member Detail
+    // Handle Service Category Navigation
+    if (newRoute === AppRoute.SERVICE_CATEGORY && params?.categoryData) {
+      setCurrentServiceCategory(params.categoryData);
+    }
+    
     if ((newRoute === AppRoute.ADMIN_USER_DETAIL || newRoute === AppRoute.CRM_MEMBER_DETAIL) && params?.userId) {
       setSelectedUserId(params.userId);
     }
-    // Also check for memberId param name consistency (NetworkCRM uses memberId)
     if (newRoute === AppRoute.CRM_MEMBER_DETAIL && params?.memberId) {
       setSelectedUserId(params.memberId);
     }
     
-    // Handle UPI Deep Linking
     if (newRoute === AppRoute.UPI_CENTER) {
       if (params?.view) {
         setUpiView(params.view);
@@ -101,17 +105,14 @@ const App: React.FC = () => {
     );
   }
 
-  // Define which routes should show the Bottom Navigation
   const showBottomNav = user !== null && [
     AppRoute.DASHBOARD, 
-    AppRoute.VIDEO_HUB, 
     AppRoute.CHAT_HUB, 
-    AppRoute.MARKETPLACE, 
     AppRoute.AI_HUB,
-    AppRoute.LAUNCHER
+    AppRoute.VIDEO_HUB, 
+    AppRoute.MARKETPLACE
   ].includes(route);
 
-  // Router Content Logic
   const renderContent = () => {
     switch (route) {
       case AppRoute.LOGIN:
@@ -148,6 +149,10 @@ const App: React.FC = () => {
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <SectionDetail onNavigate={handleNavigate} section={currentSection} />;
         
+      case AppRoute.SERVICE_CATEGORY:
+        if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        return <ServiceCategory onNavigate={handleNavigate} categoryData={currentServiceCategory} />;
+
       case AppRoute.PROFILE:
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <Profile user={user} onNavigate={handleNavigate} />;
@@ -156,7 +161,6 @@ const App: React.FC = () => {
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <UPIPaymentCenter user={user} onNavigate={handleNavigate} initialView={upiView} />;
 
-      // --- CRM ROUTES ---
       case AppRoute.CRM_DASHBOARD:
         if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         return <NetworkCRM user={user} onNavigate={handleNavigate} />;

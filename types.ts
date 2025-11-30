@@ -60,8 +60,11 @@ export enum AppRoute {
   // New Main Tabs
   VIDEO_HUB = 'VIDEO_HUB',
   CHAT_HUB = 'CHAT_HUB',
-  AI_HUB = 'AI_HUB', // New AI Tab
+  AI_HUB = 'AI_HUB',
   MARKETPLACE = 'MARKETPLACE',
+  
+  // Dynamic Category Page
+  SERVICE_CATEGORY = 'SERVICE_CATEGORY',
   
   // CRM Routes
   CRM_DASHBOARD = 'CRM_DASHBOARD',
@@ -82,6 +85,14 @@ export interface AppSectionItem {
   isCore?: boolean;
   previewMessage?: string; 
   previewCategories?: string[];
+}
+
+export interface ServiceCategoryData {
+  id: string;
+  title: string;
+  iconName: string;
+  color: string;
+  subCategories: string[];
 }
 
 export interface AppCategory {

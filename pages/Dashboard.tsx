@@ -1,16 +1,17 @@
 
 import React, { useState } from 'react';
-import { User, AppRoute } from '../types';
+import { User, AppRoute, ServiceCategoryData } from '../types';
 import { logoutUser } from '../services/storage';
 import { 
-  LayoutGrid, Bell, QrCode, User as UserIcon,
+  Bell, QrCode, User as UserIcon,
   Landmark, Wallet, History, CreditCard,
-  Zap, Droplet, Flame, Wifi, ChevronRight, Users, Trophy,
-  Smartphone, Briefcase, ShoppingCart, Pill, MonitorPlay,
-  Network, UserPlus, ShieldCheck, Banknote, Star, Package, Car
+  Users, Trophy, Network, UserPlus, ShieldCheck, Banknote, Star,
+  Zap, ShoppingBag, Heart, Plane, MonitorPlay, TrendingUp, Sun, GraduationCap,
+  ShoppingCart, Package, Pill, Car, Smartphone, Wifi, Droplet, Flame, LayoutGrid
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { AppDrawer } from '../components/AppDrawer';
+import { SERVICE_CATEGORIES } from '../constants';
 
 interface DashboardProps {
   user: User;
@@ -33,7 +34,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
   // Safe name access
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
-  // Check if directMembers is defined before checking length
+  // Defensive check for directMembers
   const directMembersCount = (user.directMembers || []).length;
 
   const coreTools = [
@@ -47,7 +48,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
     { id: 8, name: "Ranks", icon: <Star size={20} /> }, 
   ];
 
-  // Updated Quick Commerce List (5 items as requested)
   const quickCommerce = [
     { name: "Quick Grocery", icon: <ShoppingCart size={20} />, action: () => alert("Coming soon"), color: "bg-green-100 text-green-600" },
     { name: "Quick Essentials", icon: <Package size={20} />, action: () => alert("Coming soon"), color: "bg-orange-100 text-orange-600" },
@@ -55,6 +55,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
     { name: "Taxi & Car", icon: <Car size={20} />, action: () => alert("Coming soon"), color: "bg-blue-100 text-blue-600" },
     { name: "Entertainment", icon: <MonitorPlay size={20} />, action: () => alert("Coming soon"), color: "bg-purple-100 text-purple-600" },
   ];
+
+  // Helper to get icon component based on name string from constants
+  const getCategoryIcon = (iconName: string, size: number) => {
+    switch (iconName) {
+      case 'Zap': return <Zap size={size} />;
+      case 'ShoppingBag': return <ShoppingBag size={size} />;
+      case 'Heart': return <Heart size={size} />;
+      case 'Plane': return <Plane size={size} />;
+      case 'MonitorPlay': return <MonitorPlay size={size} />;
+      case 'TrendingUp': return <TrendingUp size={size} />;
+      case 'Sun': return <Sun size={size} />;
+      case 'GraduationCap': return <GraduationCap size={size} />;
+      default: return <Wallet size={size} />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
@@ -80,7 +95,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
                <span className="text-xs font-semibold text-teal-100 opacity-90">Welcome back</span>
                <span className="text-sm font-bold leading-tight">{firstName}</span>
                <span className="text-[10px] text-teal-200 flex items-center gap-1">
-                 Bangalore, India <ChevronRight size={10} />
+                 Bangalore, India 
                </span>
              </div>
           </div>
@@ -98,11 +113,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
 
       <main className="max-w-md mx-auto px-4 pt-4 space-y-6">
         
-        {/* --- SECTION 1: UPI + WALLET (Compact) --- */}
+        {/* --- SECTION 1: UPI + WALLET --- */}
         <div>
           <div className="bg-white rounded-2xl p-4 shadow-sm mb-3">
              <p className="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-wide">Transfer Money</p>
-             {/* Updated to grid-cols-5 to accommodate Quick Pay */}
              <div className="grid grid-cols-5 gap-2 text-center">
                 <button onClick={() => navigateUPI('SCAN')} className="flex flex-col items-center gap-1 group">
                    <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100">
@@ -168,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
         {/* --- SECTION 2: NETWORK BUSINESS TOOLS --- */}
         <div>
            <div className="flex items-center gap-2 mb-3">
-              <Briefcase size={18} className="text-teal-700" />
+              <Users size={18} className="text-teal-700" />
               <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Network Business Tools</h2>
            </div>
            
@@ -186,7 +200,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
            </div>
         </div>
 
-        {/* --- SECTION 3: QUICK COMMERCE --- */}
+        {/* --- SECTION 3: EXPLORE SERVICES (New 4x2 Grid) --- */}
+        <div>
+           <div className="flex items-center gap-2 mb-3">
+              <LayoutGrid size={18} className="text-purple-600" />
+              <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Explore Services</h2>
+           </div>
+           
+           <div className="grid grid-cols-4 gap-3">
+              {SERVICE_CATEGORIES.map((category) => (
+                 <button 
+                   key={category.id} 
+                   onClick={() => onNavigate(AppRoute.SERVICE_CATEGORY, { categoryData: category })}
+                   className="flex flex-col items-center gap-2 group active:scale-95 transition-transform"
+                 >
+                    <div className={`w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center ${category.color}`}>
+                       {getCategoryIcon(category.iconName, 24)}
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-700 text-center leading-tight h-8 flex items-center justify-center w-full">
+                      {category.title}
+                    </span>
+                 </button>
+              ))}
+           </div>
+        </div>
+
+        {/* --- SECTION 4: QUICK COMMERCE (5 Toggles) --- */}
         <div>
            <div className="flex items-center gap-2 mb-3">
               <Zap size={18} className="text-orange-600" />
@@ -209,8 +248,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
            </div>
         </div>
 
-        {/* --- SECTION 4: MY NETWORK CRM --- */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        {/* --- SECTION 5: MY NETWORK CRM --- */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mt-2">
            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                  <Trophy size={18} className="text-amber-500" />
@@ -235,7 +274,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
            </Button>
         </div>
 
-        {/* --- SECTION 5: RECHARGE & BILLS (Secondary) --- */}
+        {/* --- SECTION 6: RECHARGE & BILLS (Secondary) --- */}
         <div className="bg-white rounded-2xl p-4 shadow-sm mt-2">
            <div className="flex justify-between items-center mb-3">
              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Recharge & Bills (Utilities)</p>
@@ -263,7 +302,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
         </div>
 
         <p className="text-center text-[10px] text-gray-300 py-4">
-          Secured by Paradise Systems • Version 1.4
+          Secured by Paradise Systems • Version 1.5
         </p>
 
       </main>

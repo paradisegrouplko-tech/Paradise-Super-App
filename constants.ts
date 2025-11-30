@@ -1,5 +1,5 @@
 
-import { OccupationCategory, AppCategory } from './types';
+import { OccupationCategory, AppCategory, ServiceCategoryData } from './types';
 
 export const MAX_DIRECT_MEMBERS = 15;
 
@@ -98,6 +98,98 @@ export const OCCUPATIONS: OccupationCategory[] = [
 
 export const ROOT_ADMIN_ID = "PARADISE001";
 export const ROOT_ADMIN_PHONE = "1234567890";
+
+// --- NEW SERVICE DATA FOR HOME SCREEN ---
+export const SERVICE_CATEGORIES: ServiceCategoryData[] = [
+  {
+    id: "payments",
+    title: "Quick Payments & Daily Utilities",
+    iconName: "Zap",
+    color: "text-blue-600 bg-blue-50",
+    subCategories: [
+      "Mobile Recharge", "DTH & Fastag", "Electricity Bill", "Water & Gas Bill",
+      "Loan EMI", "Credit Card Pay", "Broadband Bill", "Landline Bill",
+      "Insurance Premiums", "School Fee Pay", "Tax Payments", "Prepaid Wallet Top-up"
+    ]
+  },
+  {
+    id: "quick_commerce",
+    title: "QuickCommerce",
+    iconName: "ShoppingBag",
+    color: "text-orange-600 bg-orange-50",
+    subCategories: [
+      "Quick Grocery", "Fruits & Vegetables", "Household Essentials", "Snacks & Beverages",
+      "Baby Products", "Stationery", "Kitchen Needs", "Instant Beverages",
+      "Ready-to-eat Food", "Pet Supplies", "Cleaning Supplies", "Home Needs"
+    ]
+  },
+  {
+    id: "health",
+    title: "Health & Wellness",
+    iconName: "Heart",
+    color: "text-rose-600 bg-rose-50",
+    subCategories: [
+      "Quick Pharmacy", "Doctor On Call", "Lab Tests", "Mental Health",
+      "Ayurveda", "Homeopathy", "Supplements", "Fitness Store",
+      "Women's Health", "Elderly Care", "Emergency Care", "Wellness Plans"
+    ]
+  },
+  {
+    id: "travel",
+    title: "Travel & Transport",
+    iconName: "Plane",
+    color: "text-sky-600 bg-sky-50",
+    subCategories: [
+      "Taxi & Auto", "Bike Rentals", "Car Rentals", "Intercity Cab",
+      "Flights", "Trains", "Bus Booking", "Hotels & Stays",
+      "Tour Packages", "Airport Transfers", "Driver On Demand", "Local Travel Deals"
+    ]
+  },
+  {
+    id: "entertainment",
+    title: "Digital Lifestyle & Entertainment",
+    iconName: "MonitorPlay",
+    color: "text-purple-600 bg-purple-50",
+    subCategories: [
+      "Games", "Short Videos", "OTT Subscriptions", "Music & Podcasts",
+      "Meme Hub", "Live Streams", "Comics & Reading", "Creator Hub",
+      "Wallpapers", "Ringtones", "E-Books", "Radio"
+    ]
+  },
+  {
+    id: "finance",
+    title: "Finance & Investing",
+    iconName: "TrendingUp",
+    color: "text-emerald-600 bg-emerald-50",
+    subCategories: [
+      "Crypto Trading", "Stock Market", "Mutual Funds", "Digital Gold",
+      "SIP Center", "Insurance", "Credit Score", "Instant Loans",
+      "Tax Tools", "Investment Calculators", "EMI Calculator", "Budget Tracker"
+    ]
+  },
+  {
+    id: "spirituality",
+    title: "Spirituality & Astrology",
+    iconName: "Sun",
+    color: "text-amber-600 bg-amber-50",
+    subCategories: [
+      "Astrology", "Tarot", "Numerology", "Vastu",
+      "Puja Booking", "Kundli Report", "Planetary Remedies", "Gemstone Advice",
+      "Panchang", "Horoscope Feed", "Matchmaking", "Ritual Services"
+    ]
+  },
+  {
+    id: "learning",
+    title: "Learning & Student Hub",
+    iconName: "GraduationCap",
+    color: "text-indigo-600 bg-indigo-50",
+    subCategories: [
+      "Online Courses", "Skill Learning", "Competitive Exams", "Doubt Solving",
+      "Homework Helper", "Coding for Kids", "Career Guidance", "Children Learning Games",
+      "College Counselling", "Spoken English", "Digital Skills", "Parenting Guides"
+    ]
+  }
+];
 
 export const APP_SECTIONS: AppCategory[] = [
   {
@@ -253,20 +345,6 @@ export const DUMMY_VIDEOS = [
     views: "8.5K views",
     thumbnail: "https://images.unsplash.com/photo-1579535984712-a8f7492d240b?auto=format&fit=crop&q=80&w=600",
   },
-  {
-    id: 3,
-    title: "Real Estate Market Trends",
-    channel: "Property Insider",
-    views: "15K views",
-    thumbnail: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600",
-  },
-  {
-    id: 4,
-    title: "Digital Marketing Masterclass",
-    channel: "Tech Skills",
-    views: "5K views",
-    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600",
-  },
 ];
 
 export const DUMMY_CHATS = [
@@ -285,21 +363,5 @@ export const DUMMY_CHATS = [
     time: "Yesterday",
     avatar: "T",
     unread: 0
-  },
-  {
-    id: 3,
-    name: "Direct Member (Alice)",
-    lastMessage: "I just registered a new member!",
-    time: "Yesterday",
-    avatar: "A",
-    unread: 0
-  },
-  {
-    id: 4,
-    name: "Network Group",
-    lastMessage: "Welcome to all new joiners!",
-    time: "2 days ago",
-    avatar: "G",
-    unread: 5
   },
 ];
