@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Home, PlaySquare, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
 import { AppRoute } from '../types';
+import { useLanguage } from '../services/language';
 
 interface BottomNavProps {
   activeRoute: AppRoute;
@@ -9,12 +9,14 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeRoute, onNavigate }) => {
+  const { t } = useLanguage();
+  
   const tabs = [
-    { id: 'home', label: 'Home', icon: <Home size={22} />, route: AppRoute.DASHBOARD },
-    { id: 'chat', label: 'Chat', icon: <MessageCircle size={22} />, route: AppRoute.CHAT_HUB },
-    { id: 'ai', label: 'Paradise AI', icon: <Sparkles size={22} />, route: AppRoute.AI_HUB },
-    { id: 'video', label: 'Video', icon: <PlaySquare size={22} />, route: AppRoute.VIDEO_HUB },
-    { id: 'market', label: 'Marketplace', icon: <ShoppingBag size={22} />, route: AppRoute.MARKETPLACE },
+    { id: 'home', label: t('HOME'), icon: <Home size={22} />, route: AppRoute.DASHBOARD },
+    { id: 'chat', label: t('CHAT'), icon: <MessageCircle size={22} />, route: AppRoute.CHAT_HUB },
+    { id: 'ai', label: t('PARADISE_AI'), icon: <Sparkles size={22} />, route: AppRoute.AI_HUB },
+    { id: 'video', label: t('VIDEO'), icon: <PlaySquare size={22} />, route: AppRoute.VIDEO_HUB },
+    { id: 'market', label: t('MARKETPLACE'), icon: <ShoppingBag size={22} />, route: AppRoute.MARKETPLACE },
   ];
 
   return (

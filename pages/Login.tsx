@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -6,6 +5,7 @@ import { loginUser, getLastLoggedInUserPhone, getUserByPhone } from '../services
 import { AppRoute } from '../types';
 import { ROOT_ADMIN_PHONE } from '../constants';
 import { ShieldCheck, Fingerprint, Lock } from 'lucide-react';
+import { useLanguage } from '../services/language';
 
 interface LoginProps {
   onLoginSuccess: (user: any) => void;
@@ -13,6 +13,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
+  const { t } = useLanguage(); // Access translations if needed, or keep simple for Login
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,13 +21,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
   const [canUseBiometric, setCanUseBiometric] = useState(false);
 
   useEffect(() => {
-    // Check if we can offer biometric login
     const lastPhone = getLastLoggedInUserPhone();
     if (lastPhone) {
       const user = getUserByPhone(lastPhone);
       if (user && user.biometricEnabled) {
         setCanUseBiometric(true);
-        // Pre-fill phone for convenience
         setPhoneNumber(lastPhone);
       }
     }
@@ -37,13 +36,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
     setIsLoading(true);
     setError('');
 
-    // Simulate network delay
     setTimeout(() => {
-      const user = loginUser(phoneNumber, password);
-      if (user) {
-        onLoginSuccess(user);
+      const result = loginUser(phoneNumber, password);
+      if (result.success && result.user) {
+        onLoginSuccess(result.user);
       } else {
-        setError('Invalid Phone Number or Password');
+        setError(result.message || 'Invalid Credentials');
         setIsLoading(false);
       }
     }, 600);
@@ -51,7 +49,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
 
   const handleBiometricLogin = () => {
     setIsLoading(true);
-    // Simulate Biometric Scan Delay
     setTimeout(() => {
        const lastPhone = getLastLoggedInUserPhone();
        if (lastPhone) {
@@ -59,11 +56,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
          if (user) {
             onLoginSuccess(user);
          } else {
-           setError("Biometric validation failed. Please use password.");
+           setError("Biometric failed.");
            setIsLoading(false);
          }
        }
-    }, 1500);
+    }, 1000);
   };
 
   const fillDemoUser = () => {
@@ -112,11 +109,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
           )}
 
           <div className="space-y-3 pt-2">
-            <Button 
-              type="submit" 
-              fullWidth 
-              disabled={isLoading}
-            >
+            <Button type="submit" fullWidth disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
 
@@ -130,7 +123,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
                 className="flex items-center justify-center gap-2 border-teal-200 text-teal-700 hover:bg-teal-50"
               >
                 <Fingerprint size={20} />
-                Login with Face ID / Biometric
+                Biometric Login
               </Button>
             )}
 
@@ -139,7 +132,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
               variant="ghost"
               fullWidth
               className="text-gray-500 font-normal hover:bg-gray-100"
-              onClick={() => alert("Forgot password functionality coming soon.")}
+              onClick={() => alert("Coming soon")}
             >
               Forgot Password
             </Button>
@@ -167,12 +160,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
             className="flex items-center justify-center gap-2 mx-auto px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
           >
             <Lock size={16} />
-            Login as Admin
+            Admin Login
           </button>
           
           <div className="mt-4">
              <button onClick={fillDemoUser} className="text-xs text-gray-400 hover:text-gray-600 underline">
-               Fill Admin Credentials (Demo)
+               Fill Demo User
              </button>
           </div>
         </div>

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { AppRoute, User } from '../types';
-import { ArrowLeft, UserCircle, Fingerprint, Shield, Smartphone } from 'lucide-react';
+import { ArrowLeft, UserCircle, Fingerprint, Shield, Smartphone, Copy } from 'lucide-react';
 import { Button } from '../components/Button';
 import { updateUserProfile } from '../services/storage';
 
@@ -18,10 +17,8 @@ export const Profile: React.FC<ProfileProps> = ({ user, onNavigate }) => {
 
   const handleToggle = () => {
     if (!biometricEnabled) {
-      // Trying to enable
       setShowConfirm(true);
     } else {
-      // Trying to disable - just do it
       updateSetting(false);
     }
   };
@@ -46,6 +43,13 @@ export const Profile: React.FC<ProfileProps> = ({ user, onNavigate }) => {
     }
   };
 
+  const copySponsorCode = () => {
+    if (user.sponsorCode) {
+      navigator.clipboard.writeText(user.sponsorCode);
+      alert("Sponsor ID Copied!");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="bg-white shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
@@ -66,10 +70,22 @@ export const Profile: React.FC<ProfileProps> = ({ user, onNavigate }) => {
              <UserCircle size={48} />
           </div>
           <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-          <p className="text-gray-500 text-sm">{user.phoneNumber}</p>
+          <p className="text-gray-500 text-sm">{user.mobileNumber}</p>
+          
+          {/* Sponsor ID Block */}
+          <div className="mt-4 w-full bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+             <div>
+                <p className="text-[10px] text-gray-400 font-bold uppercase">My Paradise ID</p>
+                <p className="text-sm font-mono font-bold text-teal-700">{user.sponsorCode || 'Generating...'}</p>
+             </div>
+             <button onClick={copySponsorCode} className="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+                <Copy size={18} />
+             </button>
+          </div>
+
           <div className="mt-4 flex gap-2">
-             <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">ID: {user.id}</span>
-             <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-medium">{user.occupationCategory}</span>
+             <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">System ID: {user.id}</span>
+             <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-medium">{user.occupationCategory.split(' ')[0]}</span>
           </div>
         </div>
 

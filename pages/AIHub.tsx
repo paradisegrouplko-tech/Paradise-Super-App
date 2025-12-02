@@ -1,16 +1,17 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { AppRoute } from '../types';
 import { Sparkles, Send, Mic, Image } from 'lucide-react';
+import { useLanguage } from '../services/language';
 
 interface AIHubProps {
   onNavigate: (route: AppRoute) => void;
 }
 
 export const AIHub: React.FC<AIHubProps> = ({ onNavigate }) => {
+  const { t } = useLanguage();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
-    { role: 'ai', text: 'Hello! I am Paradise AI. How can I help you today?' }
+    { role: 'ai', text: t('AI_GREETING') }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -34,7 +35,7 @@ export const AIHub: React.FC<AIHubProps> = ({ onNavigate }) => {
       setIsTyping(false);
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: "I am a demo AI for Paradise Super App. In the future, I will be connected to advanced models like Gemini to assist you with trading, shopping, and more!" 
+        text: "I am a demo AI for Paradise Super App. Future versions will be multilingual." 
       }]);
     }, 1500);
   };
@@ -47,9 +48,9 @@ export const AIHub: React.FC<AIHubProps> = ({ onNavigate }) => {
           <Sparkles size={20} />
         </div>
         <div>
-          <h1 className="text-white font-bold text-lg">Paradise AI</h1>
+          <h1 className="text-white font-bold text-lg">{t('PARADISE_AI')}</h1>
           <p className="text-gray-400 text-xs flex items-center gap-1">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> {t('ONLINE')}
           </p>
         </div>
       </div>
@@ -89,7 +90,7 @@ export const AIHub: React.FC<AIHubProps> = ({ onNavigate }) => {
           <textarea 
             className="flex-1 bg-transparent text-white text-sm outline-none resize-none max-h-32 py-2"
             rows={1}
-            placeholder="Ask anything..."
+            placeholder={t('ASK_ANYTHING')}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

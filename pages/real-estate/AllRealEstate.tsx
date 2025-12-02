@@ -1,32 +1,35 @@
 import React from 'react';
 import { AppRoute } from '../../types';
-import { ArrowLeft, Building2, HardHat, Map, FileCheck, Key, Percent, Briefcase, Home, Calculator, PenTool, Scale, Construction, Eye, MapPin } from 'lucide-react';
+import { ArrowLeft, Building2, Map, FileCheck, Key, Percent, Home, Calculator, PenTool, Scale, Construction, Eye, MapPin } from 'lucide-react';
+import { useLanguage } from '../../services/language';
 
 interface AllRealEstateProps {
   onNavigate: (route: AppRoute) => void;
 }
 
 export const AllRealEstate: React.FC<AllRealEstateProps> = ({ onNavigate }) => {
-
+  const { t } = useLanguage();
+  
   const handleServiceClick = (serviceName: string) => {
-     if (serviceName === 'Site Visit Booking') {
+     if (serviceName === 'SITE_VISIT') {
         onNavigate(AppRoute.SITE_VISIT_BOOKING);
      } else {
-        alert(`${serviceName} - This feature will be available soon.`);
+        alert(`${t('FEATURE_UNAVAILABLE')}`);
      }
   };
 
   const homeServices = [
-    { icon: <Map size={20} />, label: "Buy Residential Plot" },
-    { icon: <Home size={20} />, label: "Buy Farm Land" },
-    { icon: <Building2 size={20} />, label: "Buy Commercial Plot" },
-    { icon: <Eye size={20} />, label: "Property Viewer" },
-    { icon: <MapPin size={20} />, label: "Site Visit Booking" },
-    { icon: <FileCheck size={20} />, label: "Property Verification" },
-    { icon: <Key size={20} />, label: "Sell My Property" },
-    { icon: <Percent size={20} />, label: "Real Estate Commission Plan" },
+    { icon: <Map size={20} />, label: "BUY_RES_PLOT" },
+    { icon: <Home size={20} />, label: "BUY_FARM_LAND" },
+    { icon: <Building2 size={20} />, label: "BUY_COMM_PLOT" },
+    { icon: <Eye size={20} />, label: "PROPERTY_VIEWER" },
+    { icon: <MapPin size={20} />, label: "SITE_VISIT" },
+    { icon: <FileCheck size={20} />, label: "VERIFICATION" },
+    { icon: <Key size={20} />, label: "SELL_PROPERTY" },
+    { icon: <Percent size={20} />, label: "COMMISSION_PLAN" },
   ];
 
+  // Keeping others as text for now, or map to keys if needed
   const moreServices = [
     { icon: <Building2 size={20} />, label: "Buy Apartment / Flat" },
     { icon: <Home size={20} />, label: "Buy Villa / Luxury Property" },
@@ -51,14 +54,13 @@ export const AllRealEstate: React.FC<AllRealEstateProps> = ({ onNavigate }) => {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">All Real Estate Services</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('ALL_REAL_ESTATE')}</h1>
       </div>
 
       <div className="p-4 space-y-8">
         
-        {/* Home Screen Services */}
         <div>
-           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Core Services</h2>
+           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">{t('CORE_SERVICES')}</h2>
            <div className="grid grid-cols-4 gap-3">
               {homeServices.map((item, idx) => (
                 <button 
@@ -70,16 +72,15 @@ export const AllRealEstate: React.FC<AllRealEstateProps> = ({ onNavigate }) => {
                       {item.icon}
                    </div>
                    <span className="text-[10px] font-medium text-gray-600 text-center leading-tight h-8 flex items-center justify-center w-full">
-                     {item.label}
+                     {t(item.label as any) !== item.label ? t(item.label as any) : item.label}
                    </span>
                 </button>
               ))}
            </div>
         </div>
 
-        {/* More Services */}
         <div>
-           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Additional Services</h2>
+           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">{t('ADDITIONAL_SERVICES')}</h2>
            <div className="grid grid-cols-4 gap-3">
               {moreServices.map((item, idx) => (
                 <button 

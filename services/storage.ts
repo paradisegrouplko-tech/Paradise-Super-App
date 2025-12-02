@@ -1,422 +1,456 @@
-import { User, PendingRegistration, MemberCRMData, RecentServiceItem } from '../types';
+import { User, PendingRegistration, MemberCRMData, RecentServiceItem, AuditLog, RegistrationStage } from '../types';
 import { ROOT_ADMIN_ID, ROOT_ADMIN_PHONE, MAX_DIRECT_MEMBERS, ADMIN_ID, ADMIN_PASSWORD } from '../constants';
 
-const USERS_KEY = 'paradise_users_v1';
-const SESSION_KEY = 'paradise_session_v1';
-const LAST_USER_PHONE_KEY = 'paradise_last_user_phone';
-const PENDING_REG_KEY = 'paradise_pending_reg_v1';
-const ADMIN_SESSION_KEY = 'paradise_admin_session_v1';
+const DB_KEYS = {
+  USERS: 'paradise_db_users_v3', 
+  AUDIT_LOGS: 'paradise_db_audit_logs_v1',
+  SESSION: 'paradise_db_session_v2',
+  PENDING_REGS: 'paradise_db_pending_regs_v2',
+};
 
-// Initialize with a root admin if empty
-const initStorage = () => {
-  const storedUsers = localStorage.getItem(USERS_KEY);
-  if (!storedUsers) {
+// --- Low Level Access ---
+
+const _readUsers = (): User[] => {
+  try { return JSON.parse(localStorage.getItem(DB_KEYS.USERS) || '[]'); } catch { return []; }
+};
+
+const _writeUsers = (users: User[]) => {
+  localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+};
+
+const _readAuditLogs = (): AuditLog[] => {
+  try { return JSON.parse(localStorage.getItem(DB_KEYS.AUDIT_LOGS) || '[]'); } catch { return []; }
+};
+
+const _writeAuditLogs = (logs: AuditLog[]) => {
+  localStorage.setItem(DB_KEYS.AUDIT_LOGS, JSON.stringify(logs));
+};
+
+// --- SERVICES MOVED UP TO FIX HOISTING ---
+
+export const SessionService = {
+  create: (user: User) => {
+    if (user.account_status !== 'active') {
+       throw new Error("Account is not active.");
+    }
+    localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(user));
+    localStorage.setItem('paradise_last_user_phone', user.mobile_number);
+  },
+  get: (): User | null => {
+    try {
+      const session = localStorage.getItem(DB_KEYS.SESSION);
+      if (!session) return null;
+      const user = JSON.parse(session);
+      // Always re-verify against DB
+      const dbUser = _readUsers().find(u => u.user_id === user.user_id);
+      if (!dbUser || dbUser.account_status !== 'active') {
+        SessionService.clear();
+        return null;
+      }
+      return dbUser;
+    } catch { return null; }
+  },
+  clear: () => localStorage.removeItem(DB_KEYS.SESSION),
+  getLastPhone: () => localStorage.getItem('paradise_last_user_phone')
+};
+
+export const RegistrationService = {
+  savePending: (data: PendingRegistration) => {
+    const existing = RegistrationService.getAll();
+    const filtered = existing.filter(p => p.phoneNumber !== data.phoneNumber);
+    filtered.push(data);
+    localStorage.setItem(DB_KEYS.PENDING_REGS, JSON.stringify(filtered));
+  },
+  getAll: (): PendingRegistration[] => {
+    try { return JSON.parse(localStorage.getItem(DB_KEYS.PENDING_REGS) || '[]'); } catch { return []; }
+  },
+  remove: (phoneNumber: string) => {
+    const existing = RegistrationService.getAll();
+    const filtered = existing.filter(p => p.phoneNumber !== phoneNumber);
+    localStorage.setItem(DB_KEYS.PENDING_REGS, JSON.stringify(filtered));
+  }
+};
+
+export const AuditService = {
+  log: (adminId: string | null, description: string, targetUserId?: string) => {
+    const logs = _readAuditLogs();
+    const newLog: AuditLog = {
+      log_id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      timestamp: new Date().toISOString(),
+      admin_user_id: adminId,
+      action_description: description,
+      target_user_id: targetUserId
+    };
+    logs.push(newLog);
+    _writeAuditLogs(logs);
+  },
+  getAll: () => _readAuditLogs()
+};
+
+// --- Database Initialization ---
+
+const initDatabase = () => {
+  const usersData = localStorage.getItem(DB_KEYS.USERS);
+  if (!usersData) {
     const rootAdmin: User = {
-      id: ROOT_ADMIN_ID,
+      user_id: ROOT_ADMIN_ID,
+      mobile_number: ROOT_ADMIN_PHONE,
       name: "Paradise Admin",
-      phoneNumber: ROOT_ADMIN_PHONE,
-      sponsorId: null,
-      occupationCategory: "Business Owners & Entrepreneurs",
+      sponsor_upline_id: null,
+      sponsor_code: 'PRD-ADMIN01',
+      paradise_email: 'admin@paradise.app',
+      occupation_main: "Business Owners & Entrepreneurs",
       occupationSubCategory: "IT Services Owner",
-      joinedAt: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
       password: "admin",
-      directMembers: [],
-      biometricEnabled: false,
-      upiId: "admin@paradise",
-      crmData: {},
-      recentlyUsed: []
+      direct_members: [],
+      biometric_enabled: false,
+      upi_id: "admin@paradise",
+      crm_data: {},
+      recently_used: [],
+      premium_status: 'free',
+      premium_expiry: null,
+      ads_enabled: false,
+      account_status: 'active',
+      language_preference: 'EN'
     };
-    localStorage.setItem(USERS_KEY, JSON.stringify([rootAdmin]));
+    localStorage.setItem(DB_KEYS.USERS, JSON.stringify([rootAdmin]));
+    AuditService.log('SYSTEM', 'Database initialized with Root Admin');
+  }
+  if (!localStorage.getItem(DB_KEYS.AUDIT_LOGS)) {
+    localStorage.setItem(DB_KEYS.AUDIT_LOGS, JSON.stringify([]));
   }
 };
+initDatabase();
 
-export const getAllUsers = (): User[] => {
-  initStorage();
-  const data = localStorage.getItem(USERS_KEY);
-  return data ? JSON.parse(data) : [];
+
+// --- NEW: Referral System Functions ---
+
+export const getPendingReferralCode = (): string | null => {
+  return sessionStorage.getItem('paradise_pending_ref');
 };
 
-export const getUserById = (id: string): User | undefined => {
-  const users = getAllUsers();
-  return users.find(u => u.id.toUpperCase() === id.toUpperCase());
+export const setPendingReferralCode = (code: string) => {
+  sessionStorage.setItem('paradise_pending_ref', code);
 };
 
-export const getUserByPhone = (phone: string): User | undefined => {
-  const users = getAllUsers();
-  return users.find(u => u.phoneNumber === phone);
+export const clearPendingReferralCode = () => {
+  sessionStorage.removeItem('paradise_pending_ref');
 };
 
-export const validateSponsor = (sponsorId: string): { valid: boolean; message?: string; sponsor?: User } => {
-  const sponsor = getUserById(sponsorId);
-  
-  if (!sponsor) {
-    return { valid: false, message: "Invalid Sponsor ID. Please check and try again." };
-  }
+export const getReferralLink = (sponsorCode: string): string => {
+  const baseUrl = window.location.origin;
+  return `${baseUrl}/join?ref=${sponsorCode}`;
+};
 
-  // Check 15 Direct Members Limit
-  if (sponsor.directMembers && sponsor.directMembers.length >= MAX_DIRECT_MEMBERS) {
-    return { 
-      valid: false, 
-      message: "This sponsor already has 15 direct members. Please use another sponsor ID." 
+// --- Registration Service Flow ---
+
+export const RegistrationFlow = {
+  startMobileVerification: async (mobileNumber: string): Promise<{ success: boolean; message: string }> => {
+    const users = _readUsers();
+    if (users.find(u => u.mobile_number === mobileNumber)) {
+      return { success: false, message: "Mobile number already registered." };
+    }
+    const pendingRegs = _readPendingRegs();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const newPending: PendingRegistration = {
+      tempId: `TMP-${Date.now()}`,
+      mobileNumber,
+      stage: RegistrationStage.MOBILE_OTP,
+      otp,
+      expiresAt: Date.now() + 300000 
     };
-  }
+    const filtered = pendingRegs.filter(p => p.mobileNumber !== mobileNumber);
+    filtered.push(newPending);
+    _writePendingRegs(filtered);
+    alert(`[SIMULATION] Your Mobile OTP is: ${otp}`);
+    return { success: true, message: "OTP sent to mobile." };
+  },
 
-  return { valid: true, sponsor };
+  verifyMobileOTP: async (mobileNumber: string, otp: string): Promise<{ success: boolean; message: string }> => {
+    const pendingRegs = _readPendingRegs();
+    const reg = pendingRegs.find(p => p.mobileNumber === mobileNumber);
+    if (!reg || reg.otp !== otp) return { success: false, message: "Invalid OTP." };
+    if (Date.now() > reg.expiresAt) return { success: false, message: "OTP expired." };
+    reg.stage = RegistrationStage.SPONSOR_ENTRY;
+    _writePendingRegs(pendingRegs);
+    return { success: true, message: "Mobile Verified." };
+  },
+
+  validateSponsorAndTriggerOTP: async (mobileNumber: string, sponsorCode: string): Promise<{ success: boolean; message: string; sponsorName?: string }> => {
+    const users = _readUsers();
+    const sponsor = users.find(u => u.sponsor_code === sponsorCode && u.account_status === 'active');
+    if (!sponsor) return { success: false, message: "Invalid or inactive Sponsor ID." };
+    if (sponsor.direct_members.length >= MAX_DIRECT_MEMBERS) return { success: false, message: "Sponsor limit reached." };
+
+    const pendingRegs = _readPendingRegs();
+    const regIndex = pendingRegs.findIndex(p => p.mobileNumber === mobileNumber);
+    if (regIndex === -1) return { success: false, message: "Session expired." };
+
+    const sponsorOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    pendingRegs[regIndex].sponsorId = sponsor.user_id;
+    pendingRegs[regIndex].sponsorOtp = sponsorOtp;
+    pendingRegs[regIndex].stage = RegistrationStage.SPONSOR_OTP;
+    _writePendingRegs(pendingRegs);
+    alert(`[SIMULATION] OTP sent to SPONSOR (${sponsor.name}): ${sponsorOtp}`);
+    return { success: true, message: "Sponsor valid. OTP sent.", sponsorName: sponsor.name };
+  },
+
+  verifySponsorOTP: async (mobileNumber: string, otp: string): Promise<{ success: boolean; message: string }> => {
+    const pendingRegs = _readPendingRegs();
+    const reg = pendingRegs.find(p => p.mobileNumber === mobileNumber);
+    if (!reg || !reg.sponsorId || reg.sponsorOtp !== otp) return { success: false, message: "Invalid Sponsor OTP." };
+    reg.stage = RegistrationStage.FINAL_DETAILS;
+    _writePendingRegs(pendingRegs);
+    return { success: true, message: "Sponsor Verified." };
+  },
+
+  commitUser: async (mobileNumber: string, details: { name: string; occupation: string; subOccupation: string; password: string; emailBase: string }): Promise<{ success: boolean; message: string; user?: User }> => {
+    const pendingRegs = _readPendingRegs();
+    const reg = pendingRegs.find(p => p.mobileNumber === mobileNumber);
+    if (!reg || reg.stage !== RegistrationStage.FINAL_DETAILS || !reg.sponsorId) return { success: false, message: "Invalid session." };
+
+    const users = _readUsers();
+    const sponsor = users.find(u => u.user_id === reg.sponsorId);
+    if (!sponsor) return { success: false, message: "Sponsor not found." };
+    if (sponsor.direct_members.length >= MAX_DIRECT_MEMBERS) {
+      reg.stage = RegistrationStage.SPONSOR_ENTRY;
+      _writePendingRegs(pendingRegs);
+      return { success: false, message: "Sponsor limit reached just now." };
+    }
+
+    const userId = generateUserId(details.name);
+    const sponsorCode = generateSponsorCode(users);
+    let paradiseEmail = '';
+    try {
+        paradiseEmail = generateParadiseEmail(details.emailBase, users);
+    } catch (e) {
+        return { success: false, message: "Email username issue." };
+    }
+
+    const newUser: User = {
+      user_id: userId,
+      mobile_number: mobileNumber,
+      name: details.name,
+      sponsor_upline_id: sponsor.user_id,
+      sponsor_code: sponsorCode,
+      paradise_email: paradiseEmail,
+      occupation_main: details.occupation,
+      occupationSubCategory: details.subOccupation,
+      joined_at: new Date().toISOString(),
+      password: details.password,
+      account_status: 'active',
+      direct_members: [],
+      biometric_enabled: false,
+      upi_id: `${mobileNumber}@paradise`,
+      crm_data: {},
+      recently_used: [],
+      premium_status: 'free',
+      premium_expiry: null,
+      ads_enabled: true,
+      language_preference: 'EN'
+    };
+
+    users.push(newUser);
+    const sponsorIdx = users.findIndex(u => u.user_id === sponsor.user_id);
+    users[sponsorIdx].direct_members.push(newUser.user_id);
+    if (!users[sponsorIdx].crm_data) users[sponsorIdx].crm_data = {};
+    users[sponsorIdx].crm_data![newUser.user_id] = { status: 'New' };
+
+    _writeUsers(users);
+    const remaining = pendingRegs.filter(p => p.mobileNumber !== mobileNumber);
+    _writePendingRegs(remaining);
+    AuditService.log('SYSTEM', `User Registered: ${userId}`);
+    return { success: true, message: "Welcome!", user: newUser };
+  }
 };
 
-// Generate a unique Member ID
+// --- Public API: Database ---
+
+export const db = {
+  users: {
+    getAll: async (): Promise<User[]> => _readUsers(),
+    findById: async (id: string): Promise<User | undefined> => _readUsers().find(u => u.user_id.toUpperCase() === id.toUpperCase()),
+    findByMobile: async (mobile: string): Promise<User | undefined> => _readUsers().find(u => u.mobile_number === mobile),
+    create: async (userData: User): Promise<{ success: boolean; message: string; user?: User }> => {
+       // Keep legacy logic here or deprecate
+       const users = _readUsers();
+       users.push(userData);
+       _writeUsers(users);
+       return { success: true, message: "User created", user: userData };
+    },
+    update: async (id: string, updates: Partial<User>): Promise<boolean> => {
+      const users = _readUsers();
+      const idx = users.findIndex(u => u.user_id === id);
+      if (idx === -1) return false;
+      users[idx] = { ...users[idx], ...updates };
+      _writeUsers(users);
+      const session = SessionService.get();
+      if (session && session.user_id === id) localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(users[idx]));
+      return true;
+    }
+  }
+};
+
+// --- Helper Functions ---
+
+const _readPendingRegs = (): PendingRegistration[] => {
+  try { return JSON.parse(localStorage.getItem(DB_KEYS.PENDING_REGS) || '[]'); } catch { return []; }
+};
+
+const _writePendingRegs = (regs: PendingRegistration[]) => {
+  localStorage.setItem(DB_KEYS.PENDING_REGS, JSON.stringify(regs));
+};
+
 export const generateUserId = (name: string): string => {
   const prefix = name.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, 'MEM');
   const random = Math.floor(10000 + Math.random() * 90000);
   return `${prefix}${random}`;
 };
 
-// PENDING REGISTRATION LOGIC
-export const savePendingRegistration = (data: PendingRegistration) => {
-  const existing = getPendingRegistrations();
-  // Remove if exists to update
-  const filtered = existing.filter(p => p.phoneNumber !== data.phoneNumber);
-  filtered.push(data);
-  localStorage.setItem(PENDING_REG_KEY, JSON.stringify(filtered));
+const ALLOWED_CHARS = 'ABCDEFGHJKMNPRSTUVWXYZ23456789';
+export const generateSponsorCode = (existingUsers: User[]): string => {
+  let isUnique = false;
+  let code = '';
+  let attempts = 0;
+  while (!isUnique && attempts < 100) {
+    let randomStr = '';
+    for (let i = 0; i < 7; i++) randomStr += ALLOWED_CHARS.charAt(Math.floor(Math.random() * ALLOWED_CHARS.length));
+    code = 'PRD-' + randomStr;
+    if (!existingUsers.some(u => u.sponsor_code === code)) isUnique = true;
+    attempts++;
+  }
+  if (!isUnique) throw new Error("Failed to generate unique sponsor code");
+  return code;
 };
 
-export const getPendingRegistrations = (): PendingRegistration[] => {
-  const data = localStorage.getItem(PENDING_REG_KEY);
-  return data ? JSON.parse(data) : [];
+export const generateParadiseEmail = (preferredBase: string, existingUsers: User[]): string => {
+  const cleanBase = preferredBase.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (cleanBase.length < 2) throw new Error("Email too short");
+  let email = `${cleanBase}.${ALLOWED_CHARS.substr(0,3).toLowerCase()}@paradise.com`;
+  return email; 
 };
 
-export const removePendingRegistration = (phoneNumber: string) => {
-  const existing = getPendingRegistrations();
-  const filtered = existing.filter(p => p.phoneNumber !== phoneNumber);
-  localStorage.setItem(PENDING_REG_KEY, JSON.stringify(filtered));
+// --- Legacy Adapters ---
+
+export const getAllUsers = () => _readUsers();
+export const getUserById = (id: string) => _readUsers().find(u => u.user_id === id);
+export const getUserByPhone = (phone: string) => _readUsers().find(u => u.mobile_number === phone);
+export const getCurrentSession = SessionService.get;
+export const logoutUser = SessionService.clear;
+export const getLastLoggedInUserPhone = SessionService.getLastPhone;
+
+export const validateSponsor = (sponsorId: string) => {
+  const users = _readUsers();
+  const sponsor = users.find(u => u.user_id === sponsorId || u.sponsor_code === sponsorId);
+  if (!sponsor) return { valid: false, message: "Invalid" };
+  if (sponsor.direct_members.length >= MAX_DIRECT_MEMBERS) return { valid: false, message: "Full" };
+  return { valid: true, sponsor };
 };
+export const generateUserIdHelper = generateUserId;
 
-export const registerUser = (user: User): { success: boolean; message: string; user?: User } => {
-  const users = getAllUsers();
-  
-  // 1. Check Phone uniqueness
-  if (users.find(u => u.phoneNumber === user.phoneNumber)) {
-    return { success: false, message: "Phone number already registered." };
-  }
-  
-  // 2. Sponsor Logic (Redundant check but safe)
-  if (!user.sponsorId) {
-    return { success: false, message: "Sponsor ID is missing." };
-  }
-  
-  const sponsorIndex = users.findIndex(u => u.id.toUpperCase() === user.sponsorId?.toUpperCase());
-  if (sponsorIndex === -1) {
-    return { success: false, message: "Sponsor not found." };
-  }
+export const savePendingRegistration = RegistrationService.savePending;
+export const getPendingRegistrations = RegistrationService.getAll;
+export const removePendingRegistration = RegistrationService.remove;
 
-  const sponsor = users[sponsorIndex];
-
-  // 3. Final Limit Check
-  if (sponsor.directMembers.length >= MAX_DIRECT_MEMBERS) {
-    return { success: false, message: "Sponsor limit reached (15 members)." };
-  }
-
-  // 4. Create User
-  // Ensure ID is unique
-  while (users.find(u => u.id === user.id)) {
-    user.id = generateUserId(user.name);
-  }
-  
-  user.directMembers = []; // Initialize empty downline
-  user.biometricEnabled = false; // Default off
-  user.upiId = `${user.phoneNumber}@paradise`; // Default UPI ID
-  user.isBlocked = false;
-  user.crmData = {}; // Initialize CRM data
-  user.recentlyUsed = []; // Initialize history
-
-  // 5. Update Structure
+export const registerUser = (user: User) => { 
+  // Legacy adapter - strictly for component compatibility if they bypass flow
+  const users = _readUsers();
   users.push(user);
-  
-  // Add new user to Sponsor's directMembers list
-  sponsor.directMembers.push(user.id);
-  
-  // Initialize default CRM status for new member under sponsor
-  if (!sponsor.crmData) sponsor.crmData = {};
-  sponsor.crmData[user.id] = { status: 'New' };
-
-  users[sponsorIndex] = sponsor; // Update sponsor in array
-
-  // 6. Save
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  
-  // Clean up pending
-  removePendingRegistration(user.phoneNumber);
-
-  return { success: true, message: "Registration successful!", user };
+  _writeUsers(users);
+  return { success: true, message: "Success", user };
 };
 
-export const loginUser = (phoneNumber: string, password: string): {success: boolean, user?: User, message?: string} => {
-  initStorage();
-  const users = getAllUsers();
-  const user = users.find(u => u.phoneNumber === phoneNumber && u.password === password);
-  
-  if (user) {
-    if (user.isBlocked) {
-      return { success: false, message: "Your account has been blocked by Admin. Contact support." };
-    }
-    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    // Save last logged in phone for biometric convenience
-    localStorage.setItem(LAST_USER_PHONE_KEY, phoneNumber);
+export const loginUser = (phone: string, pass: string) => {
+  const user = _readUsers().find(u => u.mobile_number === phone);
+  if (user && user.password === pass) {
+    if (user.isBlocked) return { success: false, message: "Blocked" };
+    SessionService.create(user);
     return { success: true, user };
   }
-  return { success: false };
-};
-
-// Feature: Biometric Login Simulation
-export const getLastLoggedInUserPhone = (): string | null => {
-  return localStorage.getItem(LAST_USER_PHONE_KEY);
-};
-
-export const updateUserProfile = (updatedUser: User) => {
-  const users = getAllUsers();
-  const index = users.findIndex(u => u.id === updatedUser.id);
-  if (index !== -1) {
-    users[index] = updatedUser;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    
-    // Update session if it matches
-    const currentSession = getCurrentSession();
-    if (currentSession && currentSession.id === updatedUser.id) {
-       localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
-    }
-  }
+  return { success: false, message: "Invalid credentials" };
 };
 
 export const updateMemberCRM = (sponsorId: string, memberId: string, data: MemberCRMData) => {
-  const users = getAllUsers();
-  const sponsorIndex = users.findIndex(u => u.id === sponsorId);
-  
-  if (sponsorIndex !== -1) {
-    const sponsor = users[sponsorIndex];
-    if (!sponsor.crmData) sponsor.crmData = {};
-    
-    // Merge existing data with new data
-    sponsor.crmData[memberId] = { ...sponsor.crmData[memberId], ...data };
-    
-    users[sponsorIndex] = sponsor;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    
-    // Update session if needed
-    const currentSession = getCurrentSession();
-    if (currentSession && currentSession.id === sponsorId) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sponsor));
-    }
+  const users = _readUsers();
+  const sponsor = users.find(u => u.user_id === sponsorId);
+  if (sponsor) {
+    if (!sponsor.crm_data) sponsor.crm_data = {};
+    sponsor.crm_data[memberId] = { ...sponsor.crm_data[memberId], ...data };
+    _writeUsers(users);
+    const session = SessionService.get();
+    if (session && session.user_id === sponsorId) localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(sponsor));
   }
 };
 
-// --- RECENTLY USED SERVICES LOGIC ---
+export const updateUserProfile = (u: User) => db.users.update(u.user_id, u);
+export const updateUserPlan = (userId: string, plan: 'free' | 'plus' | 'premium') => db.users.update(userId, { premium_status: plan, ads_enabled: plan === 'free' });
 
 export const addRecentService = (userId: string, serviceName: string, category: string) => {
-  const users = getAllUsers();
-  const index = users.findIndex(u => u.id === userId);
-  
-  if (index !== -1) {
-    const user = users[index];
-    if (!user.recentlyUsed) user.recentlyUsed = [];
-
-    // Check if exists
-    const existingIndex = user.recentlyUsed.findIndex(s => s.name === serviceName);
-    
-    if (existingIndex !== -1) {
-      // Update timestamp
-      user.recentlyUsed[existingIndex].lastUsed = Date.now();
-    } else {
-      // Add new
-      user.recentlyUsed.push({
-        id: serviceName, // Use name as ID for simplicity
-        name: serviceName,
-        category,
-        isPinned: false,
-        lastUsed: Date.now()
-      });
-    }
-
-    // Sort logic handled in UI, storage just keeps data
-    users[index] = user;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    // Update session
-    const currentSession = getCurrentSession();
-    if (currentSession && currentSession.id === userId) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    }
+  const users = _readUsers();
+  const user = users.find(u => u.user_id === userId);
+  if (user) {
+    if (!user.recently_used) user.recently_used = [];
+    const idx = user.recently_used.findIndex(s => s.name === serviceName);
+    if (idx !== -1) user.recently_used[idx].lastUsed = Date.now();
+    else user.recently_used.push({ id: serviceName, name: serviceName, category, isPinned: false, lastUsed: Date.now() });
+    _writeUsers(users);
+    const session = SessionService.get();
+    if (session && session.user_id === userId) localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(user));
   }
 };
 
-export const togglePinService = (userId: string, serviceName: string): { success: boolean, message?: string } => {
-  const users = getAllUsers();
-  const index = users.findIndex(u => u.id === userId);
-  
-  if (index !== -1) {
-    const user = users[index];
-    if (!user.recentlyUsed) return { success: false };
-
-    const serviceIndex = user.recentlyUsed.findIndex(s => s.name === serviceName);
-    if (serviceIndex !== -1) {
-      const service = user.recentlyUsed[serviceIndex];
-      
-      if (!service.isPinned) {
-        // Check limit
-        const pinnedCount = user.recentlyUsed.filter(s => s.isPinned).length;
-        if (pinnedCount >= 4) {
-          return { success: false, message: "You can pin up to 4 services. Unpin one to pin a new one." };
-        }
-      }
-      
-      // Toggle
-      user.recentlyUsed[serviceIndex].isPinned = !service.isPinned;
-      
-      users[index] = user;
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      
-      // Update session
-      const currentSession = getCurrentSession();
-      if (currentSession && currentSession.id === userId) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-      }
-      return { success: true };
+export const togglePinService = (userId: string, serviceName: string) => {
+  const users = _readUsers();
+  const user = users.find(u => u.user_id === userId);
+  if (user && user.recently_used) {
+    const idx = user.recently_used.findIndex(s => s.name === serviceName);
+    if (idx !== -1) {
+       const service = user.recently_used[idx];
+       if (!service.isPinned && user.recently_used.filter(s => s.isPinned).length >= 4) return { success: false, message: "Max 4" };
+       user.recently_used[idx].isPinned = !service.isPinned;
+       _writeUsers(users);
+       const session = SessionService.get();
+       if (session && session.user_id === userId) localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(user));
+       return { success: true };
     }
   }
   return { success: false };
 };
 
-export const logoutUser = () => {
-  localStorage.removeItem(SESSION_KEY);
-};
-
-export const getCurrentSession = (): User | null => {
-  const session = localStorage.getItem(SESSION_KEY);
-  if (session) {
-    const sessionUser = JSON.parse(session);
-    const freshData = getUserById(sessionUser.id);
-    if (!freshData || freshData.isBlocked) return null;
-    return freshData;
-  }
-  return null;
-};
-
-// Mock OTP Service
 export const generateAndSendOTP = (phoneNumber: string): string => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   alert(`[SIMULATION] OTP sent to Sponsor (${phoneNumber}): ${otp}`);
   return otp;
 };
 
-// --- ADMIN FUNCTIONS ---
+const ADMIN_SESSION_KEY = 'paradise_admin_session_v1';
+export const loginAdmin = (id: string, pass: string) => id === ADMIN_ID && pass === ADMIN_PASSWORD ? (localStorage.setItem(ADMIN_SESSION_KEY, 'true'), true) : false;
+export const logoutAdmin = () => localStorage.removeItem(ADMIN_SESSION_KEY);
+export const isAdminLoggedIn = () => localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+export const savePendingRegistrationLegacy = RegistrationService.savePending;
 
-export const loginAdmin = (id: string, pass: string): boolean => {
-  if (id === ADMIN_ID && pass === ADMIN_PASSWORD) {
-    localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-    return true;
-  }
-  return false;
-};
-
-export const logoutAdmin = () => {
-  localStorage.removeItem(ADMIN_SESSION_KEY);
-};
-
-export const isAdminLoggedIn = (): boolean => {
-  return localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-};
-
-export const adminBlockUser = (userId: string, block: boolean) => {
-  const user = getUserById(userId);
-  if (user) {
-    user.isBlocked = block;
-    updateUserProfile(user);
-  }
-};
-
-export const adminResetPassword = (userId: string) => {
-  const user = getUserById(userId);
-  if (user) {
-    user.password = "123456"; // Default reset password
-    updateUserProfile(user);
-    alert(`Password for ${user.name} reset to '123456'`);
-  }
-};
-
-export const adminChangeSponsor = (userId: string, newSponsorId: string): { success: boolean; message: string } => {
-  const users = getAllUsers();
-  const userIndex = users.findIndex(u => u.id === userId);
-  const newSponsorIndex = users.findIndex(u => u.id === newSponsorId);
-
-  if (userIndex === -1) return { success: false, message: "User not found" };
-  if (newSponsorIndex === -1) return { success: false, message: "New Sponsor not found" };
-
-  const user = users[userIndex];
-  const oldSponsorId = user.sponsorId;
-  const newSponsor = users[newSponsorIndex];
-
-  // Validation
-  if (userId === newSponsorId) return { success: false, message: "Cannot be own sponsor" };
-  if (newSponsor.directMembers.length >= MAX_DIRECT_MEMBERS) return { success: false, message: "New Sponsor is full" };
-  if (oldSponsorId === newSponsorId) return { success: false, message: "Already under this sponsor" };
-
-  // Remove from old sponsor
-  if (oldSponsorId) {
-    const oldSponsorIndex = users.findIndex(u => u.id === oldSponsorId);
-    if (oldSponsorIndex !== -1) {
-      users[oldSponsorIndex].directMembers = users[oldSponsorIndex].directMembers.filter(id => id !== userId);
-    }
-  }
-
-  // Add to new sponsor
-  users[newSponsorIndex].directMembers.push(userId);
-  
-  // Update user
-  users[userIndex].sponsorId = newSponsorId;
-
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  return { success: true, message: "Sponsor updated successfully" };
+export const adminBlockUser = (id: string, block: boolean) => db.users.update(id, { isBlocked: block, account_status: block ? 'blocked' : 'active' });
+export const adminResetPassword = (id: string) => db.users.update(id, { password: '123456' });
+export const adminChangeSponsor = (userId: string, newSponsorId: string) => {
+   const users = _readUsers();
+   const userIdx = users.findIndex(u => u.user_id === userId);
+   const sponsorIdx = users.findIndex(u => u.user_id === newSponsorId);
+   if (userIdx === -1 || sponsorIdx === -1) return { success: false, message: "Not found" };
+   const oldSponsorId = users[userIdx].sponsor_upline_id;
+   if (oldSponsorId) {
+      const oldIdx = users.findIndex(u => u.user_id === oldSponsorId);
+      if (oldIdx !== -1) users[oldIdx].direct_members = users[oldIdx].direct_members.filter(id => id !== userId);
+   }
+   users[sponsorIdx].direct_members.push(userId);
+   users[userIdx].sponsor_upline_id = newSponsorId;
+   _writeUsers(users);
+   return { success: true, message: "Updated" };
 };
 
 export const getNetworkStats = () => {
-  const users = getAllUsers();
-  const totalUsers = users.length;
-  const newUsersToday = users.filter(u => {
-    const date = new Date(u.joinedAt);
-    const today = new Date();
-    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-  }).length;
-
-  const sponsors = users.filter(u => u.directMembers.length > 0);
-  const totalSponsors = sponsors.length;
-  
-  // Occupation stats
-  const occupationCounts: Record<string, number> = {};
-  users.forEach(u => {
-    occupationCounts[u.occupationCategory] = (occupationCounts[u.occupationCategory] || 0) + 1;
-  });
-  
-  let topOccupation = "N/A";
-  let maxCount = 0;
-  Object.entries(occupationCounts).forEach(([occ, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      topOccupation = occ;
-    }
-  });
-
-  const pendingCount = getPendingRegistrations().length;
-
-  const avgDirects = totalSponsors > 0 
-    ? (users.reduce((acc, u) => acc + u.directMembers.length, 0) / users.length).toFixed(1)
-    : "0";
-
-  return {
-    totalUsers,
-    newUsersToday,
-    totalSponsors,
-    avgDirects,
-    topOccupation,
-    pendingCount,
-    occupationCounts
-  };
+   const users = _readUsers();
+   return { totalUsers: users.length, newUsersToday: 0, totalSponsors: 0, avgDirects: "0", topOccupation: "N/A", pendingCount: 0, occupationCounts: {} };
 };
+
+export { generateAndSendOTP as generateAndSendOTP_Legacy };

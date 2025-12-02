@@ -15,6 +15,8 @@ import { SiteVisitBooking } from './pages/real-estate/SiteVisitBooking';
 import { AllRealEstate } from './pages/real-estate/AllRealEstate';
 import { NetworkCRM } from './pages/crm/NetworkCRM';
 import { CRMMemberDetail } from './pages/crm/CRMMemberDetail';
+import { PremiumAccess } from './pages/PremiumAccess';
+import { ReferAndEarn } from './pages/ReferAndEarn'; // New Page
 import { BottomNav } from './components/BottomNav';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -23,7 +25,7 @@ import { AdminUserDetail } from './pages/admin/AdminUserDetail';
 import { AdminApprovals } from './pages/admin/AdminApprovals';
 import { AdminStats } from './pages/admin/AdminStats';
 import { AppRoute, User, AppSectionItem, ServiceCategoryData } from './types';
-import { getCurrentSession, isAdminLoggedIn } from './services/storage';
+import { getCurrentSession, isAdminLoggedIn, setPendingReferralCode } from './services/storage';
 
 const App: React.FC = () => {
   const [route, setRoute] = useState<AppRoute>(AppRoute.LOGIN);
@@ -35,6 +37,19 @@ const App: React.FC = () => {
   const [upiView, setUpiView] = useState<'HOME' | 'SEND' | 'SCAN' | 'HISTORY'>('HOME');
 
   useEffect(() => {
+    // Deep Linking Logic (Simulation)
+    // Check for ?ref=CODE in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setPendingReferralCode(refCode);
+      // Ideally clear the URL here to be clean
+      window.history.replaceState({}, '', '/');
+      setRoute(AppRoute.REGISTER); // Redirect to register immediately if link found
+      setInitializing(false);
+      return; 
+    }
+
     const session = getCurrentSession();
     if (session) { setUser(session); setRoute(AppRoute.DASHBOARD); } 
     else if (isAdminLoggedIn()) { setRoute(AppRoute.ADMIN_DASHBOARD); }
@@ -75,6 +90,9 @@ const App: React.FC = () => {
       case AppRoute.UPI_CENTER: if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />; return <UPIPaymentCenter user={user} onNavigate={handleNavigate} initialView={upiView} />;
       case AppRoute.CRM_DASHBOARD: if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />; return <NetworkCRM user={user} onNavigate={handleNavigate} />;
       case AppRoute.CRM_MEMBER_DETAIL: if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />; return <CRMMemberDetail onNavigate={handleNavigate} memberId={selectedUserId} />;
+      case AppRoute.PREMIUM_ACCESS: if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />; return <PremiumAccess user={user} onNavigate={handleNavigate} />;
+      case AppRoute.REFER_AND_EARN: if (!user) return <Login onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />; return <ReferAndEarn user={user} onNavigate={handleNavigate} />;
+      
       case AppRoute.ADMIN_LOGIN: return <AdminLogin onNavigate={handleNavigate} />;
       case AppRoute.ADMIN_DASHBOARD: return <AdminDashboard onNavigate={handleNavigate} />;
       case AppRoute.ADMIN_USERS: return <AdminUsers onNavigate={handleNavigate} />;
